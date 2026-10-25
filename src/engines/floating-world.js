@@ -849,7 +849,7 @@ function poster(c, w, h, t, photo) {
 /* ---------- live frames: map the runtime's live fields onto the prototype's ---------- */
 const LV = { lean: 0, kick: 0 };
 function draw(t, live, photo) {
-  if (live) { LV.lean = live.lean; LV.kick = live.boost; RING = live.wave < 0.85 ? live.wave : -1; } else RING = -1;
+  if (live) { LV.lean = live.lean; LV.kick = live.intent != null ? live.intent : live.boost; RING = live.wave < 0.85 ? live.wave : -1; } else RING = -1;
   build(t, live ? LV : null, !!photo, cv.width, cv.height);
   drawGL();
 }
@@ -880,6 +880,10 @@ return {
   id: 'floating-world', title: 'Floating World',
   caption: 'The waves are eight summed Gerstner waves drawn as a woodblock print; Prussian blue arrived in Japanese prints in the late 1820s.',
   DURATION, T_STILL: 10.6, hintAt: 6, Q,
-  initGL, draw, poster, entrance, css: CSS
+  initGL, draw, poster, entrance, css: CSS,
+  /* flash safety: at normal speed the barrels already reach 3 light/dark reversals per second in places, the
+     WCAG 2.3.1 limit; held at 5x the same content runs at 5-6/s. Time tops out at 2x here, and the boost you
+     feel (FOV kick, spray, vibration) still follows the hold through live.intent. */
+  warpCap: () => 2
 };
 };

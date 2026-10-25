@@ -100,6 +100,7 @@ window.MM_ENGINES['<id>'] = function (rt) {
 | `lean` | −1..1, smoothed |
 | `warp` | 1..5 |
 | `boost` | sat((warp − 1) / 3) |
+| `intent` | the boost the hold asks for before `warpCap` (equals `boost` when uncapped); drive boost visuals from it so a capped ride still feels the hold |
 | `wave` | seconds since the last press (large if never) |
 | `down` | downshift envelope 0..1 after a long hold is released |
 | `holding` | bool |

@@ -116,7 +116,7 @@ function hideHint() { if (!hintGone) { hintGone = true; hn.classList.add('gone')
 let mode = 'live', paused = false, inView = true, tLive = 0, tSeek = 0, lastNow = 0, rafId = 0;
 const t0wall = performance.now();
 let lean = 0, leanT = 0, holding = false, held = 0, burst = 0, warp = 1, drag = false, dragX = 0, pressAt = -1e9, relAt = -1e9, relLvl = 0;
-const LIVE = { lean: 0, warp: 1, boost: 0, wave: 1e9, down: 0, holding: false };
+const LIVE = { lean: 0, warp: 1, boost: 0, intent: 0, wave: 1e9, down: 0, holding: false };
 let scale = (E.Q && +E.Q.scale0) || (PHONE ? 0.85 : 1), ema = 16.7, goodMs = 0, lastStep = 0;
 /* render(t): a pure function of t (no lean, no boost) */
 function render(t, photo) {
@@ -137,9 +137,10 @@ function frame(now) {
     const e = Math.min(1, held / 1.2);
     warp = Math.max(warp, Math.min(5, 1 + 3 * Math.pow(e, 1.5) + 0.5 * Math.max(0, held - 1.2)));
   } else warp = 1 + (warp - 1) * Math.exp(-dt / 0.3);
+  const want = warp; // the boost the hold asks for, before a ride's cap
   if (E.warpCap) { const c = E.warpCap(tLive); if (warp > c) warp = Math.max(1, c); }
   tLive += dt * warp;
-  LIVE.lean = lean; LIVE.warp = warp; LIVE.boost = sat((warp - 1) / 3); LIVE.wave = (now - pressAt) / 1000; LIVE.holding = holding;
+  LIVE.lean = lean; LIVE.warp = warp; LIVE.boost = sat((warp - 1) / 3); LIVE.intent = sat((want - 1) / 3); LIVE.wave = (now - pressAt) / 1000; LIVE.holding = holding;
   const rel = (now - relAt) / 1000; LIVE.down = rel < 2 ? relLvl * Math.sin(Math.PI * Math.min(1, rel / 0.7)) * Math.exp(-rel / 0.6) : 0;
   drawGL(tLive, LIVE, false);
   if (!glOK) return;
