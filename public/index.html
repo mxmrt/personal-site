@@ -715,7 +715,7 @@ function initGL() {
   try { gl = cv.getContext('webgl', { antialias: !PHONE, alpha: false, depth: false, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' }); } catch (e) { gl = null; }
   if (!gl) return false;
   // a lost context shows the poster; once restored, the next frame warms up again and the canvas returns
-  cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); glOK = false; firstGL = false; cv.classList.remove('on'); });
+  cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); glOK = false; firstGL = false; cv.classList.remove('on'); uiM = -1; rt.heroInk(null); }); // the poster is dark: default ink
   cv.addEventListener('webglcontextrestored', () => { glOK = glSetup(); restored = glOK; });
   glOK = glSetup();
   return glOK;
