@@ -185,7 +185,10 @@ function camera(t, sc, v, live) {
   hs /= 7; trackPt(sc, lat, 0);
   const ex = V3[0], ez = V3[2];
   const ba = CAM_H + 0.45 * hs, bb = Math.log(se / 7) + 1.5, eo = 0.5 * (ba + bb + Math.sqrt((ba - bb) * (ba - bb) + 1.4));
-  const ey = eo * (1 - ins) + TUBE_C * b.rise * 0.6 * ins;
+  // The averaged look-ahead can miss a narrow crest directly under the camera.
+  // Preserve the path wherever the existing 1.5-unit crest margin is already met.
+  const clear = Math.max(eo, heightAt(ex, ez) + 1.5);
+  const ey = clear * (1 - ins) + TUBE_C * b.rise * 0.6 * ins;
   const la = 30 + 0.14 * v;
   trackPt(sc + la, lat * 0.6, 0);
   let hx = V3[0] - ex, hz = V3[2] - ez; const hl = Math.hypot(hx, hz) || 1; hx /= hl; hz /= hl;
