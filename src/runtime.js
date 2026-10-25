@@ -146,7 +146,14 @@ function frame(now) {
   if (!hintGone && tLive > HINT_AT) hideHint();
   rafId = requestAnimationFrame(frame);
 }
-function kickLoop() { if (running() && !rafId) { lastNow = 0; rafId = requestAnimationFrame(frame); } }
+function kickLoop() {
+  if (!running()) {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = 0; lastNow = 0;
+    return;
+  }
+  if (!rafId) { lastNow = 0; rafId = requestAnimationFrame(frame); }
+}
 function adapt(dms, now) {
   ema += (dms - ema) * 0.1;
   if (ema > 20 && scale > 0.5 && now - lastStep > 500) { scale = Math.max(0.5, Math.round((scale - 0.1) * 10) / 10); lastStep = now; goodMs = 0; sizeCanvas(scale); }
