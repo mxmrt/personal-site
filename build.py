@@ -22,7 +22,7 @@ with open(os.path.join(HERE, 'rides.json'), encoding='utf-8') as _f:
     RIDES = json.load(_f)   # every ride that ships, in order (the tools read the same file)
 
 # ---- site settings: edit these, then rebuild ----
-SITE_URL = 'https://maxmartinelli.com'   # used for the absolute og:image URL; confirm apex vs www before deploying
+SITE_URL = 'https://maxmartinelli.com'   # canonical host (the apex answers; www has no DNS record): canonical, og:url, og:image
 TITLE = 'Max Martinelli'
 DESCRIPTION = ('Max Martinelli, career intern who likes AI and insurance: talks, writing, '
                'the Almost Nowhere podcast and experiments.')
@@ -68,6 +68,7 @@ def web_page(frag):
         '<meta name="viewport" content="width=device-width, initial-scale=1">',
         '<title>%s</title>' % a(TITLE),
         '<meta name="description" content="%s">' % a(DESCRIPTION),
+        '<link rel="canonical" href="%s/">' % SITE_URL.rstrip('/'),
         '<meta name="theme-color" content="%s">' % THEME_COLOR,
         '<meta name="color-scheme" content="dark">',
         '<link rel="icon" href="/favicon.ico" sizes="32x32">',
@@ -75,6 +76,7 @@ def web_page(frag):
         '<link rel="apple-touch-icon" href="/apple-touch-icon.png">',
         '<meta property="og:type" content="website">',
         '<meta property="og:site_name" content="%s">' % a(TITLE),
+        '<meta property="og:url" content="%s/">' % SITE_URL.rstrip('/'),
         '<meta property="og:title" content="%s">' % a(TITLE),
         '<meta property="og:description" content="%s">' % a(DESCRIPTION),
         '<meta property="og:image" content="%s/og.png">' % SITE_URL.rstrip('/'),

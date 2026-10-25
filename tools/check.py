@@ -144,6 +144,11 @@ def main():
     og = meta(property='og:image')
     if og and not re.match(r'^https://[^/]+/og\.png$', og['attrs'].get('content', '')): problems.append('og:image must be an absolute https URL to /og.png')
     if not meta(name='twitter:card'): problems.append('no twitter:card')
+    canon = first(lambda t: t['tag'] == 'link' and t['attrs'].get('rel') == 'canonical')
+    ogurl = meta(property='og:url')
+    if not canon or not re.match(r'^https://[^/]+/$', canon['attrs'].get('href', '')): problems.append('canonical link must be the absolute https home URL')
+    elif not ogurl or ogurl['attrs'].get('content') != canon['attrs']['href']: problems.append('og:url must equal the canonical URL')
+    elif og and not og['attrs'].get('content', '').startswith(canon['attrs']['href']): problems.append('og:image must be on the canonical host')
     h1s = [t for t in tags if t['tag'] == 'h1']
     if len(h1s) != 1: problems.append('%d <h1> elements (want exactly 1)' % len(h1s))
     dup = sorted({i for i in page.ids if page.ids.count(i) > 1})
