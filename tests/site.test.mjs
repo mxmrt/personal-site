@@ -163,6 +163,22 @@ await test('keyboard: skip link first, in-page nav moves focus to the section', 
   } finally { await ctx.close(); }
 });
 
+await test('"Back to top" returns focus to the top; the skip link shows for keyboard users only', async () => {
+  for (const how of ['mouse', 'keyboard']) {
+    const { ctx, page, bad } = await open(VIEWPORTS[0], { reducedMotion: 'reduce', hash: '#scale-invariant' });
+    try {
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      const back = page.locator('footer a[href="#top"]');
+      if (how === 'mouse') await back.click(); else { await back.focus(); await page.keyboard.press('Enter'); }
+      await sleep(400);
+      const s = await page.evaluate(() => ({ cls: document.activeElement.className, top: getComputedStyle(document.querySelector('.skip')).top }));
+      expect(s.cls === 'skip', `${how}: focus should move to the skip link, got "${s.cls}"`);
+      expect(s.top === (how === 'mouse' ? '-80px' : '12px'), `${how}: skip link top is ${s.top}`);
+      expect(!bad.length, bad.join('\n'));
+    } finally { await ctx.close(); }
+  }
+});
+
 await browser.close();
 await site.close();
 const failed = results.filter((r) => !r[0]);
