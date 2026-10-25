@@ -1,0 +1,8 @@
+# Response headers for every path. Cloudflare Pages and Workers static assets both read this file;
+# it is not served as a page. No Content-Security-Policy on purpose: Cloudflare zone features such as
+# Email Obfuscation or Web Analytics inject scripts, and a strict policy would silently break them.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()

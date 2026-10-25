@@ -1,0 +1,5 @@
+node_modules/
+preview/
+dev/
+.DS_Store
+*.log

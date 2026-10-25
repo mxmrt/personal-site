@@ -1,0 +1,25 @@
+{
+  "name": "maxmartinelli-site",
+  "version": "2.0.0",
+  "private": true,
+  "description": "maxmartinelli.com: one page whose hero is one of four ride animations, picked at random on each visit. Static files for Cloudflare.",
+  "scripts": {
+    "build": "python3 build.py",
+    "check": "python3 tools/check.py",
+    "test": "node tests/site.test.mjs",
+    "verify": "python3 tools/check.py && node tests/site.test.mjs",
+    "preview": "node tools/preview.mjs",
+    "serve": "node tools/serve.mjs public 8788",
+    "images": "node tools/make-images.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/big-shoulders-display": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@fontsource/martian-mono": "^5.3.0",
+    "playwright": "^1.56.0",
+    "pngjs": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
