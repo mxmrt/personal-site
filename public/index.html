@@ -889,11 +889,12 @@ function drawPoster(c, w, h, t, photo) {
   c.globalCompositeOperation = 'source-over';
 }
 
-/* ---------- hero ink: the light world (ink) flips the hero text to ink, set from draw(t) ---------- */
+/* ---------- hero ink: the light world (ink) flips the hero text to ink, set from draw(t). The flip snaps when the
+   tear has covered half the name: a cross-fade passes through a grey where text and scrim match (about 1.1:1). */
 let uiM = -1;
 const mixc = (a, b, m) => a.map((x, i) => Math.round(x + (b[i] - x) * m)).join(',');
 function uiLit(m) {
-  m = Math.round(sat(m) * 40) / 40; if (m === uiM) return; uiM = m;
+  m = sat(m) < 0.5 ? 0 : 1; if (m === uiM) return; uiM = m;
   if (m <= 0) { rt.heroInk(null); return; }
   const f = mixc([244, 241, 232], [14, 18, 30], m);
   const ac = m > 0.5 ? '#9C4508' : '#FFA62B';
