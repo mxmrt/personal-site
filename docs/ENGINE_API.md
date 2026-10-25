@@ -109,7 +109,9 @@ window.MM_ENGINES['<id>'] = function (rt) {
 
 - **Deterministic:** `draw(t, null)` is a pure function of t, using seeded randomness only. `seek(t)` must reproduce a frame exactly.
 - **No throws:** `draw` must not throw in normal operation. A throw drops the visitor to the poster for the rest of the visit.
-- **Flash safety:** no more than 3 flashes per second in any part of the hero. `node tools/preview.mjs --ride=<id> --flash` checks it.
+- **Flash safety:** no more than 3 flashes per second in any part of the hero, at normal speed and while held to accelerate.
+  - `node tools/preview.mjs --ride=<id> --scans-only --flash --hold` checks both.
+  - If holding pushes a ride past 3, cap its speed with `warpCap` and drive its boost visuals from `live.intent`, as Floating World does (capped at 2×).
 - **Legible text:**
   - rides keep the area behind the name calm, using text-safe masks;
   - a ride that turns light re-inks the hero with `rt.heroInk`.
@@ -124,5 +126,5 @@ window.MM_ENGINES['<id>'] = function (rt) {
    - Serve it with `node tools/serve.mjs dev`.
    - Open `/<id>.html#<id>`.
 3. Run `python3 build.py`, then `npm run verify`.
-4. Run `node tools/preview.mjs --ride=<id> --flash`.
+4. Run `node tools/preview.mjs --ride=<id> --flash --hold`.
 5. Compare `preview/<id>/desktop-frames.png` with `docs/reference/<id>-desktop-frames.png`. Both use the same t values.

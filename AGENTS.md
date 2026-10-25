@@ -6,7 +6,7 @@ This is maxmartinelli.com, Max Martinelli's personal site, rebuilt as one static
 
 - **The hero:** one of four WebGL "rides", picked at random on each visit.
 - **The rest of the page:** shared across all rides.
-- **Who built it:** Claude, working with Max. Max wants an independent review before it replaces his live site on Cloudflare Pages.
+- **Who built it:** Claude, working with Max. Codex reviewed it (`REVIEW.md`); the launch blockers it found are fixed (see the end of `REVIEW.md`). It goes live once Max approves the Cloudflare preview.
 - **Where to read more:**
   - `README.md` explains the architecture and the commands;
   - `docs/ENGINE_API.md` is the contract between the runtime and the rides.
@@ -27,6 +27,7 @@ npm run check                 # static checks (~5 s): build freshness, script sy
 npm test                      # browser tests (~4 min): every ride on desktop + phone, pause, off-screen, reduced motion,
                               #   random pick, "Take another ride", keyboard; one ride: node tests/site.test.mjs --ride=asymptote
 node tools/preview.mjs        # screenshots into preview/<ride>/ (add --flash for the flash-safety scan, ~3 min per ride)
+node tools/preview.mjs --ride=<id> --scans-only --flash --hold   # flash scans at normal speed and while held
 npm run serve                 # http://127.0.0.1:8788, served like Cloudflare Pages; add #many-worlds etc. to pick a ride
 ```
 
@@ -110,19 +111,13 @@ docs/reference/      expected screenshots: <ride>-desktop-frames.png and <ride>-
   - no dev ride shipped;
   - `SITE_URL` in `build.py` is right.
 
-## Known issue to look at first
+## Flash safety
 
-**Floating World clips through the lip of barrel 2.**
+Every ride must stay at 3 flashes per second or fewer (WCAG 2.3.1), both at normal speed and while a visitor holds to accelerate.
 
-- **What happens:** around t = 10.13 to 10.17 s the camera passes through the pitching lip just before the tube. The frame fills with flat dark blue for about 40 ms at normal speed.
-- **How to reproduce:** on `#floating-world`, run `seek(10.15)`, and compare it with `seek(10.10)` and `seek(10.20)`.
-- **Probable cause:** `camera()` in `src/engines/floating-world.js` keeps the camera clear of the Gerstner heightfield (`heightAt`) only, not the barrel lip.
-- **Flash count:** the flash scan counts this dip. Floating World scores 3 flashes per second in one screen cell, which is the WCAG 2.3.1 limit: it still passes, with no margin.
-- **What a fix needs:** keep the camera clear of the lip without changing the look of the ride.
-- **How to verify a fix:**
-  - seeks around 10.15;
-  - `node tools/preview.mjs --ride=floating-world --flash`;
-  - a comparison with `docs/reference/floating-world-desktop-frames.png`.
+- **Check both** after any change to a ride or to the runtime's acceleration: `node tools/preview.mjs --ride=<id> --scans-only --flash --hold`. Both scans fail above 3.
+- **Floating World is the tight one.** Its barrels already reach 3 at normal speed. Held at 5× they reached 6, so its held speed is capped at 2× with `warpCap` (2.5× measured 4). Its field-of-view kick, spray and vibration follow `live.intent`, so holding still feels like flooring it. Don't raise the cap without rerunning `--hold`.
+- **Held scans replay the runtime's hold ramp.** If you change `frame()` in `src/runtime.js`, update the `--hold` block in `tools/preview.mjs` to match.
 
 ## Intentional choices (do not report these as problems)
 
@@ -131,7 +126,9 @@ docs/reference/      expected screenshots: <ride>-desktop-frames.png and <ride>-
 - **Storage:** `localStorage` and `sessionStorage` only remember which ride to avoid or show next. There are no cookies, analytics or trackers.
 - **No sound:** the site is silent on purpose, and the sound feature was removed. Do not add audio.
 - **No CSP:** `_headers` deliberately sets no Content-Security-Policy, because Cloudflare zone features inject scripts. You may recommend one in `REVIEW.md`, but do not add it.
-- **Many Worlds:** it has five worlds. A sixth, "negative", was removed because it looked too much like "ink".
+- **Many Worlds:** it has five worlds. A sixth, "negative", was removed because it looked too much like "ink". At the ink rifts the hero text snaps between light and dark instead of fading, so it never matches its scrim.
+- **Floating World's 2× held speed:** a flash-safety cap (see above), not a bug.
+- **Retired essay:** `/articles/learning` and its `.html` and trailing-slash forms redirect home on purpose (`static/_redirects`).
 - **Runtime globals:** `window.seek`, `play`, `render`, `DURATION`, `MM_RIDE` and `MM_STILL` stay. The tools use them.
 
 ## Rules for changes
@@ -143,7 +140,7 @@ docs/reference/      expected screenshots: <ride>-desktop-frames.png and <ride>-
 - **Dependencies:** new dev dependencies need Max's OK.
 - **After any change:** run `npm run verify`.
 - **After an engine change:**
-  - run `node tools/preview.mjs --ride=<id> --flash`;
+  - run `node tools/preview.mjs --ride=<id> --flash --hold`;
   - compare `preview/<id>/desktop-frames.png` with `docs/reference/<id>-desktop-frames.png`.
 - **Commits:** small, focused commits with clear messages. Never commit secrets or tokens.
 
@@ -178,11 +175,12 @@ The live site runs on Cloudflare Pages, connected to a GitHub repo. A push to th
 4. **Check the Pages build settings with Max.** He changes these in the dashboard (Workers & Pages, then the project, then Settings, then Build):
    - Build command: empty;
    - Build output directory: `public`.
-5. **Confirm the canonical host.** Run `curl -sI https://maxmartinelli.com` and `curl -sI https://www.maxmartinelli.com`. Set `SITE_URL` in `build.py` to match, then rebuild.
-6. **Old URLs.** List the old site's page URLs, including the scrollytelling essay. Propose `static/_redirects` entries, such as `/old-path / 301`, and add them only if Max agrees.
+5. **Canonical host (done).** The apex serves the site and `www` has no DNS record, so `SITE_URL`, the canonical link and `og:url` use `https://maxmartinelli.com/`. Recheck only if Max adds `www`.
+6. **Old URLs (done).** `static/_redirects` sends the retired essay's three URLs home. Ask Max before adding any other redirect.
+   Also ask Max to turn on **Always Use HTTPS** in Cloudflare (SSL/TLS, then Edge Certificates): `http://` currently serves the page without redirecting.
 7. **Preview.** Push the branch. Pages builds a preview at `https://<branch>.<project>.pages.dev`. Check:
    - each `#ride`;
-   - `/no-such-page` returns 404;
+   - `/no-such-page` returns 404, and `/articles/learning` returns 301 to `/`;
    - the head tags (`curl -s <preview> | grep og:`).
 8. **Go live.** Merge to the production branch only after Max approves the preview.
 9. **After launch:**

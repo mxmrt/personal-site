@@ -1,4 +1,7 @@
 # Review: maxmartinelli.com
+
+> **Update, October 25, 2026:** the launch blockers below are resolved in follow-up commits. See [Follow-up after review](#follow-up-after-review) at the end. Codex's findings below are unchanged.
+
 **Verdict:** Don't ship. Six narrow fixes are complete and the final build passes the supplied tests, Firefox/WebKit checks and targeted lifecycle checks. However, Floating World triggers a **6-flashes-per-second alarm under a simulated normal hold ramp**, and two measured text-contrast failures remain. These need an approved timing or visual-treatment change before launch. The published machine-learning essay also needs a preservation/redirect decision. Nothing was pushed or deployed.
 
 Reviewed October 24, 2026 (America/New_York; some evidence timestamps are October 25 UTC). Untouched baseline: `df0519a`, **Baseline from Claude**. Final site commit: `bb3848d`. Final `public/index.html` SHA-256: `d99439f1a9c5f39f74891581ab95a6f57b5c5acc6e00a8a8a7c26b779490089f`.
@@ -309,3 +312,29 @@ No push/deploy command was run. Final Floating World image reads succeeded. The 
 6. When a later deployment is authorized, use an empty Pages build command and output `public`; verify headers, 404s, ride hashes, social image and old URLs on its preview. Refresh LinkedIn's cached preview only after the eventual launch.
 
 All six fixes are committed locally against the untouched baseline. `git diff df0519a..HEAD` shows their complete reviewable history. `preview/` contains ignored local evidence/tooling and is not shipped; preserve it separately if moving this checkout.
+
+## Follow-up after review
+
+Claude validated this review on October 25, 2026, then fixed the blockers. Each change is its own commit after `e9ab28d`; commits are listed by subject.
+
+**Validation.** The held Floating World scan was reproduced independently, with the same 6 flashes per second and the same worst count in every cell. The badge (4.18:1) and the ink-rift contrast (about 1.1:1, for about two frames at each ink rift) were reproduced. The camera fix was confirmed: cell luminance stays between 0.42 and 0.45 from 10.05 to 10.25 s, with no dip. One methodology correction: the original hold harness advanced ride time at the uncapped speed even when a ride caps it. That did not affect its Floating World result, but it would overstate any capped ride; `tools/preview.mjs --hold` replays the runtime exactly.
+
+| Finding | Resolution | Commit | Evidence |
+|---|---|---|---|
+| 1. Held Floating World flashing | Held speed capped at 2× (`warpCap`); field-of-view kick, spray and vibration follow the new `live.intent`, so the hold still feels like accelerating. Other rides unchanged. | Cap Floating World's held speed at 2x to stay within flash limits | Hold ramp, 720×450, 30 fps: uncapped 6/s, 2.5× 4/s, 2× 3/s (60 s of ride, and again with full visual kick). Normal speed unchanged at 3/s. |
+| 2. Many Worlds ink-rift contrast | Hero ink snaps when the tear has covered half the name, instead of cross-fading through grey. | Snap Many Worlds hero ink at the rift midpoint instead of fading through grey | Lowest median text contrast across both ink rifts: 1.1:1 before, 5.5:1 after. Only pixels where the tear edge crosses a letter dip, for a frame or two. Severity was closer to P3: it lasted about 40 ms. |
+| 3. Floating World badge | Text `#FFFAF0` on the unchanged `#C8402F`. | Raise Floating World's Forthcoming badge contrast to 4.77:1 | 4.18:1 to 4.77:1. A computed-style audit of all text outside the hero on all four rides finds nothing lower. |
+| 4. Essay URLs | Max retired the essay; all three forms 301 to `/`. | Redirect the retired essay URLs to the home page | `static/_redirects`; the local server applies it and a browser test checks all three forms. Confirm on the Pages preview. |
+| 8. Context loss in the ink world | The loss handler restores the default ink. | Reset Many Worlds hero ink when its WebGL context is lost | `WEBGL_lose_context` at `seek(15)`: text returns from rgb(14,18,30) to rgb(244,241,232). |
+| 9. Canonical metadata | Canonical link and `og:url` on the apex; `check.py` requires them to agree with `og:image`. | Add a canonical URL and og:url for the apex host | Static checks. |
+| Regression from `0598433` | Back to top still moves focus to the skip link, but the link only becomes visible for keyboard focus. | Keep the skip link hidden after Back to top for pointer users | A mouse click or tap used to leave a "Skip to content" box over the hero; a browser test now covers mouse and keyboard. |
+| Tooling | `preview.mjs --hold` scans 20 s of holding; `--scans-only` skips screenshots. | Add a held-acceleration flash scan to the preview tool | Fails above 3 flashes per second. |
+
+**Final verification** (Chromium 141 with SwiftShader): 8/8 static checks; 14/14 browser tests; flash scans at normal speed / held: Many Worlds 0/0, Scale Invariant 0/0, Floating World 3/3 (2× cap), Asymptote 0/0 flashes per second. All eight frame sheets are pixel-identical to `docs/reference/`, except the playback hint's visibility on one phone sheet.
+
+**Updated verdict: ready to launch.** First check the Cloudflare preview on a phone (each ride, holding to accelerate) and confirm the essay redirects there. Still open, none blocking:
+
+- 6: adaptive resolution can't recover on 60 Hz screens. This is the first thing to do after launch, because any startup stall lowers resolution for the rest of the visit.
+- 5: live reduced-motion change.
+- 7: reversed `smoothstep` edges.
+- The physical-device checks listed above.

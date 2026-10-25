@@ -4,7 +4,7 @@ maxmartinelli.com is a single static page.
 
 - **The hero:** one of four animated "rides". The page picks one at random on every visit, never repeating the ride from the visitor's last visit.
 - **Everything else is shared:** the name, tagline, About, Talks, Writing, Podcast, Lab, Contact and footer stay the same; only the animation and its colours change.
-- **Interaction:** holding anywhere on the hero accelerates the ride, and a Pause button stops it.
+- **Interaction:** holding anywhere on the hero accelerates the ride (up to 5×; Floating World tops out at 2× for flash safety), and a Pause button stops it.
 - **Delivery:** `public/` holds one self-contained `index.html` (all CSS and JS inline) plus a 404 page, icons and a social image. Cloudflare serves it as static files, with no server code.
 
 ## The rides
@@ -42,7 +42,7 @@ src/shell.html        markup, copy, CSS, per-ride colour tokens, and the head sc
 src/runtime.js        the shared host: canvases, clock, input, pause, fallbacks, footer
 src/engines/*.js      the four rides (test.js is a dev-only smoke test, never shipped)
 rides.json            the rides that ship
-static/               404.html, favicon.svg/.ico, apple-touch-icon.png, og.png, _headers
+static/               404.html, favicon.svg/.ico, apple-touch-icon.png, og.png, _headers, _redirects
 build.py              inlines shell + engines + runtime into public/index.html and copies static/ next to it
 public/               what Cloudflare serves: generated, committed, never edited by hand
 tools/                check.py, engine-contract.mjs, serve.mjs, preview.mjs, make-images.mjs, browser.mjs
@@ -67,6 +67,7 @@ npm test                           # browser tests: each ride on desktop + phone
 npm run verify                     # check + test
 npm run serve                      # http://127.0.0.1:8788 behaves like Cloudflare Pages (404 page, _headers)
 node tools/preview.mjs --flash     # screenshots of every ride into preview/ + flash-safety scan (~3 min per ride)
+node tools/preview.mjs --scans-only --flash --hold   # flash scans only, at normal speed and while held (~10 min per ride)
 node tools/make-images.mjs         # regenerate og.png and the icons, then run python3 build.py
 ```
 
@@ -81,7 +82,7 @@ The tests render WebGL in software (SwiftShader) so they run anywhere. That is m
 - **Site settings:** these are at the top of `build.py`:
   - title;
   - meta description;
-  - `SITE_URL`, used for the absolute `og:image` URL;
+  - `SITE_URL`, the canonical host (`https://maxmartinelli.com`), used for the canonical link, `og:url` and `og:image`;
   - theme colour.
 - **A ride:** see `docs/ENGINE_API.md`.
 
@@ -114,11 +115,21 @@ Cloudflare now recommends Workers static assets for new projects. To use it, add
 { "name": "maxmartinelli", "compatibility_date": "2026-10-01", "assets": { "directory": "./public", "not_found_handling": "404-page" } }
 ```
 
-### Before the first deploy
+### Launch checklist
 
-- **Canonical host:** confirm whether the site lives at `maxmartinelli.com` or `www.maxmartinelli.com`. Set `SITE_URL` in `build.py` to match, then rebuild.
-- **Old URLs:** the old site had other pages, such as the scrollytelling essay. Decide whether those URLs should redirect to `/`. If so, add a `static/_redirects` file, for example `/old-path / 301`, then rebuild.
-- **Social preview:** after deploying, check the preview with LinkedIn's Post Inspector.
+Already done in the code:
+
+- **Canonical host:** the apex, `https://maxmartinelli.com`. It serves the current site and `www` has no DNS record.
+- **Old URLs:** the retired essay's three addresses (`/articles/learning`, `.html`, and with a trailing slash) redirect home with a 301, via `static/_redirects`. Every other unknown path gets the real 404 page.
+
+To do at launch:
+
+1. **Pages build settings:** empty build command, build output directory `public` (see above).
+2. **Always Use HTTPS:** turn it on in Cloudflare (SSL/TLS, then Edge Certificates). Today `http://maxmartinelli.com` serves the page without redirecting.
+3. **On the preview URL**, before merging:
+   - open the page on your phone and try each ride (`#many-worlds`, `#scale-invariant`, `#floating-world`, `#asymptote`), including holding to accelerate;
+   - `curl -sI <preview>/articles/learning` shows `301` to `/`, and `curl -sI <preview>/no-such-page` shows `404`.
+4. **After going live:** run `https://maxmartinelli.com` through LinkedIn's Post Inspector so it picks up the new `og.png`.
 
 `_headers` sets `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY` and a restrictive `Permissions-Policy`. It sets no Content-Security-Policy on purpose: Cloudflare features such as Email Obfuscation and Web Analytics inject scripts, and a strict policy would silently block them.
 
@@ -127,7 +138,15 @@ Cloudflare now recommends Workers static assets for new projects. To use it, add
 Last verified on this build:
 
 - `npm run check`: 8/8 checks pass.
-- `npm test`: all tests pass, using Chromium 141 with SwiftShader and Playwright 1.64.
-- Flash scan (20 s at 20 fps, 3×3 grid), worst case:
-  - Many Worlds, Scale Invariant and Asymptote: 0 flashes per second.
-  - Floating World: 3 flashes per second in one cell. That is the WCAG limit, so it passes, but with no margin. The cause is a brief camera clip through a wave lip; see "Known issue" in `AGENTS.md`.
+- `npm test`: 14/14 tests pass, using Chromium 141 with SwiftShader and Playwright 1.64. Codex's review ran Firefox 157 and WebKit 27.2 (48/48) on the build before its follow-up fixes.
+- Flash scans (3×3 grid, worst flashes in any second; WCAG 2.3.1 allows 3):
+
+  | Ride | Normal speed (20 s at 20 fps) | Held to accelerate (20 s at 30 fps) |
+  |---|---|---|
+  | Many Worlds | 0 | 0 (up to 5×) |
+  | Scale Invariant | 0 | 0 (up to 5×) |
+  | Floating World | 3 | 3 (capped at 2×) |
+  | Asymptote | 0 | 0 (up to 5×) |
+
+  Floating World's barrels reach 3 at normal speed, so its held speed is capped at 2×: uncapped it reached 6, and 2.5× reached 4.
+- Text contrast: everything outside the hero is at least 4.77:1 on every ride. The hero text keeps a median of at least 5.5:1 through Many Worlds' ink rifts.
