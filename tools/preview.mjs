@@ -1,8 +1,10 @@
 // preview.mjs: screenshots and visual checks of each ride, served from public/ like Cloudflare Pages.
 //
-// usage: node tools/preview.mjs [--ride=ID] [--out=preview] [--flash] [--quick] [--frames=6] [--wait=2600]
-//   --ride   one ride (default: all four)          --flash  scan 20 s of the hero for flashing (slow, ~2 min per ride)
-//   --quick  skip the stitched full-page images    --wait   ms of playback before the "rest" screenshot
+// usage: node tools/preview.mjs [--ride=ID] [--out=preview] [--flash] [--hold] [--scans-only] [--quick] [--frames=6] [--wait=2600]
+//   --ride   one ride (default: all four)          --flash  scan 20 s of the hero at normal speed for flashing (slow)
+//   --quick  skip the stitched full-page images    --hold   scan 20 s of holding to accelerate for flashing (slow): the
+//   --wait   ms of playback before "rest" shots             runtime's ramp to 5x, each ride's warpCap, live boost/intent
+//   --scans-only  skip the screenshots and run only --flash / --hold
 //
 // Writes <out>/<ride>/:
 //   desktop-rest.png, phone-rest.png         what a visitor sees a few seconds after load
@@ -63,6 +65,25 @@ function cellLuminance(pngBuf, n = 3) {
   return sums.map((s, i) => s / counts[i]);
 }
 
+/* WCAG 2.3.1 general flash: a flash is a pair of opposing changes of >= 0.1 relative luminance where the darker state is
+   below 0.8. Counted per cell of a 3x3 grid (mean linear luminance); worst count of flashes in any 1 s window. The area
+   criterion is not modelled, so this errs on the strict side. */
+function worstFlashes(series, fps) {
+  let worst = { flashes: 0, cell: -1, at: 0 };
+  for (let c = 0; c < 9; c++) {
+    const L = series.map((s) => s[c]), trans = [];
+    let ext = L[0], d0 = 0;
+    for (let k = 1; k < L.length; k++) {
+      const d = L[k] - ext;
+      if (d0 >= 0 && L[k] > ext) { ext = L[k]; d0 = 1; continue; }
+      if (d0 <= 0 && L[k] < ext) { ext = L[k]; d0 = -1; continue; }
+      if (Math.abs(d) >= 0.1 && Math.min(L[k], ext) < 0.8) { trans.push(k / fps); ext = L[k]; d0 = d > 0 ? 1 : -1; }
+    }
+    for (const t0 of trans) { const fl = Math.floor(trans.filter((x) => x >= t0 && x < t0 + 1).length / 2); if (fl > worst.flashes) worst = { flashes: fl, cell: c, at: +t0.toFixed(3) }; }
+  }
+  return worst;
+}
+
 for (const id of IDS) {
   const dir = path.join(OUT, id);
   fs.mkdirSync(dir, { recursive: true });
@@ -82,7 +103,7 @@ for (const id of IDS) {
   };
   const url = `${site.url}/#${id}`;
 
-  for (const vp of VPS) {
+  for (const vp of opts['scans-only'] ? [] : VPS) {
     const ctx = await newCtx(vp), page = await ctx.newPage();
     logs(page, vp.name);
     await page.goto(url, { waitUntil: 'load' });
@@ -148,26 +169,48 @@ for (const id of IDS) {
       await page.evaluate(async (t) => { window.scrollTo({ top: 0, behavior: 'instant' }); await window.seek(t); await new Promise((r) => requestAnimationFrame(r)); }, k / fps);
       series.push(cellLuminance(await page.screenshot({ type: 'png' })));
     }
-    let worst = { flashes: 0, cell: -1, at: 0 };
-    for (let c = 0; c < 9; c++) {
-      const L = series.map((s) => s[c]), trans = [];
-      let ext = L[0], d0 = 0;
-      for (let k = 1; k < L.length; k++) {
-        const d = L[k] - ext;
-        if (d0 >= 0 && L[k] > ext) { ext = L[k]; d0 = 1; continue; }
-        if (d0 <= 0 && L[k] < ext) { ext = L[k]; d0 = -1; continue; }
-        if (Math.abs(d) >= 0.1 && Math.min(L[k], ext) < 0.8) { trans.push(k / fps); ext = L[k]; d0 = d > 0 ? 1 : -1; }
-      }
-      for (const t0 of trans) { const fl = Math.floor(trans.filter((x) => x >= t0 && x < t0 + 1).length / 2); if (fl > worst.flashes) worst = { flashes: fl, cell: c, at: t0 }; }
-    }
+    const worst = worstFlashes(series, fps);
     report.info.flashScan = { seconds: dur, fps, viewport: '720x450', worstFlashesPerSecond: worst.flashes, cell: worst.cell, at: worst.at };
     if (worst.flashes > 3) problem(`flash hazard: ${worst.flashes} flashes in 1 s (cell ${worst.cell}, t=${worst.at}s); keep it at 3 or fewer`);
     await ctx.close();
   }
 
+  if (opts.hold) {   // a visitor holding the hero for 20 s: same counting, live frames at 30 fps of wall time
+    const ctx = await newCtx({ viewport: { width: 720, height: 450 }, deviceScaleFactor: 1 });
+    await ctx.addInitScript(() => {   // keep a handle on the engine object and let the scan set the wall clock
+      let eng;
+      Object.defineProperty(window, 'MM_ENGINES', { configurable: true, get: () => eng, set: (v) => { eng = new Proxy(v, { set: (o, k, f) => { o[k] = typeof f === 'function' ? function (rt) { const E = f(rt); window.__E = E; return E; } : f; return true; } }); } });
+      const now = performance.now.bind(performance); performance.now = () => (window.__now != null ? window.__now : now());
+    });
+    const page = await ctx.newPage();
+    logs(page, 'hold');
+    await page.goto(url, { waitUntil: 'load' });
+    await page.waitForFunction(() => document.querySelector('#gl').classList.contains('on'), null, { timeout: 180000 });
+    await page.evaluate(async () => { await window.seek(99); });   // stop the live loop; the scan draws every frame itself
+    const fps = 30, secs = 20, series = [], base = await page.evaluate(() => performance.now());
+    let t = 0, held = 0, want = 1, maxWarp = 1;
+    for (let k = 0; k <= secs * fps; k++) {
+      if (k) { held += 1 / fps; const e = Math.min(1, held / 1.2); want = Math.max(want, Math.min(5, 1 + 3 * Math.pow(e, 1.5) + 0.5 * Math.max(0, held - 1.2))); }   // runtime.js frame()
+      const w = await page.evaluate(({ t, k, fps, base, want }) => {
+        const E = window.__E, sat = (x) => Math.max(0, Math.min(1, x)), w = Math.max(1, Math.min(want, E.warpCap ? E.warpCap(t) : 5));
+        window.__now = base + (k / fps) * 1000;
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        E.draw(t, { lean: 0, warp: w, boost: sat((w - 1) / 3), intent: sat((want - 1) / 3), wave: k / fps, down: 0, holding: true }, false);
+        return w;
+      }, { t, k, fps, base, want });
+      series.push(cellLuminance(await page.screenshot({ type: 'png' })));
+      maxWarp = Math.max(maxWarp, w);
+      if (k) t += w / fps;
+    }
+    const worst = worstFlashes(series, fps);
+    report.info.holdFlashScan = { wallSeconds: secs, fps, rideSeconds: +t.toFixed(1), maxWarp: +maxWarp.toFixed(2), viewport: '720x450', worstFlashesPerSecond: worst.flashes, cell: worst.cell, atWallSecond: worst.at };
+    if (worst.flashes > 3) problem(`flash hazard while held: ${worst.flashes} flashes in 1 s (cell ${worst.cell}, ${worst.at}s into the hold); cap the ride's speed with warpCap`);
+    await ctx.close();
+  }
+
   fs.writeFileSync(path.join(dir, 'report.json'), JSON.stringify(report, null, 2));
-  summary[id] = { problems: report.problems, warnings: report.warnings, flash: report.info.flashScan ? report.info.flashScan.worstFlashesPerSecond : 'not run' };
-  console.log(`${report.problems.length ? 'FAIL' : 'ok  '} ${id}: ${report.problems.length} problems, ${report.warnings.length} warnings${report.info.flashScan ? `, worst ${report.info.flashScan.worstFlashesPerSecond} flashes/s` : ''}  -> ${path.relative(process.cwd(), dir)}`);
+  summary[id] = { problems: report.problems, warnings: report.warnings, flash: report.info.flashScan ? report.info.flashScan.worstFlashesPerSecond : 'not run', hold: report.info.holdFlashScan ? report.info.holdFlashScan.worstFlashesPerSecond : 'not run' };
+  console.log(`${report.problems.length ? 'FAIL' : 'ok  '} ${id}: ${report.problems.length} problems, ${report.warnings.length} warnings${report.info.flashScan ? `, worst ${report.info.flashScan.worstFlashesPerSecond} flashes/s` : ''}${report.info.holdFlashScan ? `, held ${report.info.holdFlashScan.worstFlashesPerSecond} flashes/s (max ${report.info.holdFlashScan.maxWarp}x)` : ''}  -> ${path.relative(process.cwd(), dir)}`);
   for (const p of report.problems) console.log('     problem: ' + p);
   for (const w of report.warnings) console.log('     warning: ' + w);
 }
