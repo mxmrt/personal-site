@@ -3161,7 +3161,7 @@ D.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', (e
   el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
   try { history.replaceState(null, '', '#' + id); } catch (err) { /* sandboxed frame */ }
   const f = id === 'top' ? D.querySelector('.skip') : el.querySelector('h2') || el;
-  if (f && id !== 'top') { f.setAttribute('tabindex', '-1'); f.focus({ preventScroll: true }); }
+  if (f) { if (id !== 'top') f.setAttribute('tabindex', '-1'); f.focus({ preventScroll: true }); }
 }));
 /* take another ride: a different ride on the next load */
 const again = $('again');
