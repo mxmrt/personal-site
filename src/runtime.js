@@ -235,8 +235,10 @@ if (again) again.addEventListener('click', () => {
   const ids = Object.keys(ENG).filter((k) => k !== RIDE);
   if (!ids.length) return;
   const next = ids[Math.floor(Math.random() * ids.length)];
-  try { W.sessionStorage.setItem('mm-next', next); } catch (err) { /* storage blocked: the reload still avoids repeating this ride */ }
-  if (ENG[(location.hash || '').slice(1)]) { try { history.replaceState(null, '', location.pathname + location.search); } catch (err) { /* sandboxed frame */ } }
+  let stored = false;
+  try { W.sessionStorage.setItem('mm-next', next); stored = true; } catch (err) { /* carry the choice in the URL below */ }
+  if (!stored) W.location.hash = next;
+  else if (ENG[(location.hash || '').slice(1)]) { try { history.replaceState(null, '', location.pathname + location.search); } catch (err) { /* sandboxed frame */ } }
   W.scrollTo(0, 0);
   W.location.reload();
 });
