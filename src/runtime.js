@@ -79,6 +79,7 @@ function drawPoster(t, photo) {
 function fail(err) {
   if (err) console.error(err);
   glOK = false; cv.classList.remove('on'); hero.classList.add('still');
+  rt.heroInk(null);
   drawPoster(T_STILL, true); entrance(99);
 }
 function drawGL(t, live, photo) {
