@@ -1,0 +1,5 @@
+# Retired pages: the old essay "What Does It Mean for Machines to Learn?" now points home.
+# Cloudflare applies these before static files. Every URL form of the essay is listed so each one goes home.
+/articles/learning / 301
+/articles/learning.html / 301
+/articles/learning/ / 301

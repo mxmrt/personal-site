@@ -1,6 +1,6 @@
 // serve.mjs: serve public/ the way Cloudflare Pages does, for local preview and the tests.
-//   static files with correct types, `/` -> index.html, rules from _headers, unknown paths -> 404.html with status 404,
-//   and _headers itself is never served.
+//   static files with correct types, `/` -> index.html, rules from _headers and _redirects, unknown paths -> 404.html
+//   with status 404, and _headers / _redirects themselves are never served.
 // usage: node tools/serve.mjs [dir=public] [port=8788]
 import http from 'node:http';
 import fs from 'node:fs';
@@ -28,14 +28,32 @@ export function parseHeaders(text) {
 }
 const toRegex = (p) => new RegExp('^' + p.replace(/^https?:\/\/[^/]+/, '').split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/:\w+/g, '[^/]+')).join('.*') + '$');
 
+/* _redirects: "source destination [code]" per line (code defaults to 302); one * splat per source, reused as :splat */
+export function parseRedirects(text) {
+  const out = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim(); if (!line || line.startsWith('#')) continue;
+    const [from, to, code] = line.split(/\s+/);
+    if (!from || !to) continue;
+    out.push({ from, to, code: Number(code || 302), re: new RegExp('^' + from.split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('(.*)') + '$') });
+  }
+  return out;
+}
+
 export function createSiteServer(root) {
   root = path.resolve(root);
   const hdrFile = path.join(root, '_headers');
   const rules = fs.existsSync(hdrFile) ? parseHeaders(fs.readFileSync(hdrFile, 'utf8')).map((r) => ({ ...r, re: toRegex(r.pattern) })) : [];
   const notFound = path.join(root, '404.html');
+  const redFile = path.join(root, '_redirects');
+  const redirects = fs.existsSync(redFile) ? parseRedirects(fs.readFileSync(redFile, 'utf8')) : [];
   return http.createServer((req, res) => {
     let pathname = '/';
     try { pathname = decodeURIComponent(new URL(req.url, 'http://local').pathname); } catch { /* malformed: 404 below */ }
+    for (const r of redirects) {   // like Cloudflare: redirects win over static files
+      const m = r.re.exec(pathname);
+      if (m) { res.writeHead(r.code, { location: r.to.replace(':splat', m[1] || ''), 'cache-control': 'public, max-age=0, must-revalidate' }); return res.end(); }
+    }
     let file = path.join(root, pathname.endsWith('/') ? pathname + 'index.html' : pathname);
     if (!fs.existsSync(file) && !path.extname(file) && fs.existsSync(file + '.html')) file += '.html';
     const base = path.basename(file);

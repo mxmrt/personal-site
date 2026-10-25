@@ -186,6 +186,11 @@ def main():
         hdr = read(os.path.join(PUB, '_headers')).splitlines()
         rules = [l for l in hdr if l.strip() and not l.startswith((' ', '\t', '#'))]
         if len(rules) > 100 or any(len(l) > 2000 for l in hdr): bad.append('_headers (max 100 rules, 2000 chars per line)')
+        red = os.path.join(PUB, '_redirects')
+        if os.path.exists(red):   # Cloudflare: 'source destination [code]', max 2,100 rules, 1,000 chars per rule
+            lines = [l.strip() for l in read(red).splitlines() if l.strip() and not l.strip().startswith('#')]
+            okline = lambda f: 2 <= len(f) <= 3 and f[0].startswith('/') and (len(f) == 2 or f[2] in ('200', '301', '302', '303', '307', '308'))
+            if len(lines) > 2100 or any(len(l) > 1000 or not okline(l.split()) for l in lines): bad.append('_redirects ("source destination [code]" per line)')
         (fail if bad else ok)('deploy files present and valid' if not bad else 'deploy files wrong: ' + ', '.join(bad))
 
     # 7. size

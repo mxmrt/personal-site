@@ -58,13 +58,18 @@ async function test(name, fn) {
 }
 const expect = (cond, msg) => { if (!cond) throw new Error(msg); };
 
-await test('serves the page, 404 page, icons and headers like Cloudflare Pages', async () => {
+await test('serves the page, 404 page, icons, headers and redirects like Cloudflare Pages', async () => {
   const get = (p) => fetch(site.url + p);
   const home = await get('/');
   expect(home.status === 200 && /text\/html/.test(home.headers.get('content-type')), '/ should be 200 text/html');
   expect(home.headers.get('x-content-type-options') === 'nosniff', '_headers rules should apply to /');
   const nf = await get('/no-such-page');
   expect(nf.status === 404 && /Out of sample/.test(await nf.text()), 'unknown paths should return 404.html with status 404');
+  for (const p of ['/articles/learning', '/articles/learning.html', '/articles/learning/']) {   // the retired essay
+    const r = await fetch(site.url + p, { redirect: 'manual' });
+    expect(r.status === 301 && r.headers.get('location') === '/', `${p} should 301 to /, got ${r.status} ${r.headers.get('location')}`);
+  }
+  expect((await get('/_redirects')).status === 404, '_redirects must not be served');
   expect((await get('/_headers')).status === 404, '_headers must not be served');
   for (const [p, type] of [['/og.png', 'image/png'], ['/favicon.svg', 'image/svg+xml'], ['/favicon.ico', 'image/x-icon'], ['/apple-touch-icon.png', 'image/png']]) {
     const r = await get(p); expect(r.status === 200 && r.headers.get('content-type') === type, `${p} should be 200 ${type}`);
