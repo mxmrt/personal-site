@@ -5,7 +5,7 @@ maxmartinelli.com is a single static page.
 - **The hero:** one of four animated "rides". The page picks one at random on every visit, never repeating the ride from the visitor's last visit.
 - **Everything else is shared:** the name, tagline, About, Podcast, Lab, Contact and footer stay the same; only the animation and its colours change.
 - **Hidden for now:** Talks and Writing are written but commented out in `src/shell.html` until there's something to show.
-- **The Lab:** Sweet Spots (in progress) in its own project's look, with that project's live candy map touring its new candies; then Offbook Chess, showing its first piece (the Archer), and the CAS game theory monograph. Both are coming soon.
+- **The Lab:** Sweet Spots in its own project's look, with that project's live candy map touring its new candies and a link to the project at `/sweet-spots/`; then Offbook Chess, showing its first piece (the Archer), and the CAS game theory monograph. Both are coming soon.
 - **Interaction:** holding anywhere on the hero accelerates the ride (up to 5×; Floating World tops out at 2× for flash safety), and a Pause button stops it.
 - **Delivery:** `public/` holds one self-contained `index.html` (all CSS and JS inline) plus a 404 page, icons, a social image and the Lab's pictures. Cloudflare serves it as static files, with no server code.
 
@@ -100,7 +100,7 @@ The tests render WebGL in software (SwiftShader) so they run anywhere. That is m
 - **Copy:** all text lives in `src/shell.html`, under the `<main>` sections. Edit it, then run `python3 build.py` and `npm run check`.
 - **Talks and Writing:** to bring one back, uncomment its section in `src/shell.html` and its link in the hero nav. Move the `#articles` alias (for old `/#articles` bookmarks) from the Lab heading back to the Writing heading.
 - **Lab cards:** in the Lab section of `src/shell.html`.
-  - **Sweet Spots** uses that project's fixed colours and the parts in `src/lab/`. When its write-up is published, wrap the card's heading in a link to it.
+  - **Sweet Spots** uses that project's fixed colours and the parts in `src/lab/`. Its wordmark and "Explore Sweet Spots" link go to the project, `https://maxmartinelli.com/sweet-spots/`, which is not part of this repo.
   - **To refresh its map** from a newer Sweet Spots page, save the page and its `img/` folder, then run `python3 tools/lab/sweet_spots_data.py <page.html> --images <folder>` and `python3 tools/lab/sweet_spots_map.py <page.html> src/lab/sweet-spots-map.svg`, then `python3 build.py`.
   - **Offbook Chess** shows the Archer, `static/lab/offbook-archer-360.webp` and `-720.webp`, made from the original photo. To swap the picture, replace both files (square images) and update the `alt` text.
 - **Site settings:** these are at the top of `build.py`:
@@ -151,6 +151,7 @@ To do at launch:
 1. **Pages build settings:** empty build command, build output directory `public` (see above).
 2. **Always Use HTTPS:** turn it on in Cloudflare (SSL/TLS, then Edge Certificates). Today `http://maxmartinelli.com` serves the page without redirecting.
 3. **On the preview URL**, before merging:
+   - check that `/sweet-spots/` still loads: the Sweet Spots project lives there but not in `public/`, so it must survive the deploy (as a separate Pages project or route, or by adding it to `static/sweet-spots/`);
    - open the page on your phone and try each ride (`#many-worlds`, `#scale-invariant`, `#floating-world`, `#asymptote`), including holding to accelerate;
    - `curl -sI <preview>/articles/learning` shows `301` to `/`, and `curl -sI <preview>/no-such-page` shows `404`.
 4. **After going live:** run `https://maxmartinelli.com` through LinkedIn's Post Inspector so it picks up the new `og.png`.

@@ -88,11 +88,17 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 /* Sweet Spots wears its own project's wrapper: strawberry with grain, print crop marks, the ring-and-diamond wordmark
    (Archivo, drawn as outlines) and the project's live map with its tour of the new candies (src/lab/sweet-spots-map.js).
    Fixed colours on purpose: it looks the same on every ride. */
-.slot.ss{grid-column:1/-1;position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"sl sl" "mark sd" "map map";align-items:start;gap:14px 24px;padding:28px 24px 24px;border:0;border-radius:0;color:#1b1317;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .03  0 0 0 0 .07  0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E") repeat,#ff5a8f}
-.ss .sl{grid-area:sl;color:#1b1317}
+.slot.ss{grid-column:1/-1;position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"mark sd" "map map";align-items:start;gap:14px 24px;padding:28px 24px 24px;border:0;border-radius:0;color:#1b1317;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .03  0 0 0 0 .07  0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E") repeat,#ff5a8f}
 .ss h3{grid-area:mark;line-height:0}
+.ss-go{display:block;max-width:300px}
+.ss-go:hover .ss-mark{transform:translate(-1px,-1px)}
 .ss-mark{display:block;width:100%;max-width:300px;height:auto;overflow:visible}
-.ss .sd{grid-area:sd;margin:0;font-size:15.5px;color:#1b1317}
+.ss-about{grid-area:sd}
+.ss .sd{margin:0 0 2px;font-size:15.5px;color:#1b1317}
+.ss .sa,.ss .sa:hover{color:#1b1317;text-decoration-color:#1b1317}
+.ss .sa:hover{text-decoration-thickness:2px}
+.ss .sa::after{color:#1b1317}
+.ss a:focus-visible{outline-color:#1b1317}
 .ss-sheet{grid-area:map;display:grid;gap:8px;min-width:0;margin-top:8px;padding:12px 14px 10px;background:#fff;color:#1b1317}
 .ss-sheet :focus-visible{outline-color:#1b1317}
 .ss-head{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"cap btn" "hint hint";align-items:center;gap:2px 12px}
@@ -146,7 +152,7 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 .ss .crop{position:absolute;width:16px;height:16px;border:0 solid #1b1317;opacity:.6;pointer-events:none}
 .ss .c1{top:7px;left:7px;border-top-width:1.5px;border-left-width:1.5px}.ss .c2{top:7px;right:7px;border-top-width:1.5px;border-right-width:1.5px}
 .ss .c3{bottom:7px;left:7px;border-bottom-width:1.5px;border-left-width:1.5px}.ss .c4{bottom:7px;right:7px;border-bottom-width:1.5px;border-right-width:1.5px}
-@media (max-width:560px){.slot.ss{grid-template-columns:1fr;grid-template-areas:"sl" "mark" "sd" "map";padding:24px 18px 20px}.ss-box{aspect-ratio:1.02}.ss-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}.ss .fam{white-space:normal}.ss .fam b{display:none}}
+@media (max-width:560px){.slot.ss{grid-template-columns:1fr;grid-template-areas:"mark" "sd" "map";padding:24px 18px 20px}.ss-box{aspect-ratio:1.02}.ss-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}.ss .fam{white-space:normal}.ss .fam b{display:none}}
 @media (pointer:coarse){.ss .fam{min-height:44px}}
 @media (prefers-reduced-motion:reduce){.ss .tour{transition:none}}
 /* Offbook Chess shows its first piece, the Archer: the photo fills the card's right side and fades into the card */
@@ -228,9 +234,8 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 <ul class="slots">
 <li class="slot ss">
 <span class="crop c1" aria-hidden="true"></span><span class="crop c2" aria-hidden="true"></span><span class="crop c3" aria-hidden="true"></span><span class="crop c4" aria-hidden="true"></span>
-<span class="sl">In progress</span>
-<h3><!--include:lab/sweet-spots-wordmark.svg--></h3>
-<p class="sd">We mapped 404 real candies, had Claude and OpenAI’s Codex find the empty space between them, and designed new candies to fill it. Candy is the rehearsal for insurance filings.</p>
+<h3><a class="ss-go" href="https://maxmartinelli.com/sweet-spots/" tabindex="-1" aria-label="Sweet Spots"><!--include:lab/sweet-spots-wordmark.svg--></a></h3>
+<div class="ss-about"><p class="sd">We mapped 404 real candies, had Claude and OpenAI’s Codex find the empty space between them, and designed new candies to fill it. Candy is the rehearsal for insurance filings.</p><a class="sa" href="https://maxmartinelli.com/sweet-spots/">Explore Sweet Spots</a></div>
 <div class="ss-sheet">
 <div class="ss-head"><p class="ss-cap">Claude’s map of the 404 real candies</p><p class="ss-hint" id="ssHint"></p><button class="ss-tb" id="ssTour" type="button" hidden>Pause tour</button></div>
 <div class="ss-box" id="ssBox"><!--include:lab/sweet-spots-map.svg--><canvas id="ssCanvas" role="img" aria-label="Claude’s map of the 404 real candies, colored by family, with dashed rings on the 11 spots that stayed empty and diamonds for the 30 new candies"></canvas><div class="ss-tip" id="ssTip" role="status"></div></div>

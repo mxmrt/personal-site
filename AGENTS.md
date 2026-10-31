@@ -187,6 +187,7 @@ The live site runs on Cloudflare Pages, connected to a GitHub repo. A push to th
 7. **Preview.** Push the branch. Pages builds a preview at `https://<branch>.<project>.pages.dev`. Check:
    - each `#ride`;
    - `/no-such-page` returns 404, and `/articles/learning` returns 301 to `/`;
+   - `/sweet-spots/` still loads. The Lab links to that project page, which is not in `public/`; if it lived in the old site's files, it has to move to its own project or into `static/sweet-spots/` before going live;
    - the head tags (`curl -s <preview> | grep og:`).
 8. **Go live.** Merge to the production branch only after Max approves the preview.
 9. **After launch:**
