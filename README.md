@@ -5,9 +5,9 @@ maxmartinelli.com is a single static page.
 - **The hero:** one of four animated "rides". The page picks one at random on every visit, never repeating the ride from the visitor's last visit.
 - **Everything else is shared:** the name, tagline, About, Podcast, Lab, Contact and footer stay the same; only the animation and its colours change.
 - **Hidden for now:** Talks and Writing are written but commented out in `src/shell.html` until there's something to show.
-- **The Lab:** Sweet Spots (in progress) in its own project's look, then Offbook Chess and the CAS game theory monograph (both coming soon).
+- **The Lab:** Sweet Spots (in progress) in its own project's look, with that project's live candy map touring its new candies; then Offbook Chess, showing its first piece (the Archer), and the CAS game theory monograph. Both are coming soon.
 - **Interaction:** holding anywhere on the hero accelerates the ride (up to 5×; Floating World tops out at 2× for flash safety), and a Pause button stops it.
-- **Delivery:** `public/` holds one self-contained `index.html` (all CSS and JS inline) plus a 404 page, icons and a social image. Cloudflare serves it as static files, with no server code.
+- **Delivery:** `public/` holds one self-contained `index.html` (all CSS and JS inline) plus a 404 page, icons, a social image and the Lab's pictures. Cloudflare serves it as static files, with no server code.
 
 ## The rides
 
@@ -37,19 +37,33 @@ The site has no sound.
   - "Take another ride" in the footer reloads into a different one.
 - **Storage:** the only stored data is the last ride shown, in `localStorage`, and the requested next ride, in `sessionStorage`. There are no cookies, analytics or third-party scripts. Google Fonts is the only external request.
 
+### The Lab's Sweet Spots map
+
+The Sweet Spots card carries the hero map from the Sweet Spots page, ported to this site: Claude's map of 404 real candies (dots in their family colours), the 11 spots that stayed empty (dashed rings) and the 30 new candies (diamonds; filled for tier A).
+
+- **Fly-in:** the first time the map scrolls into view, the dots fly in and the diamonds drop onto it.
+- **Tour:** about 2 seconds later the map zooms to each new candy in turn, most novel first, with its picture, pitch and score (about 5 seconds a stop).
+- **Exploring:** hovering (or tapping) a candy shows a tooltip, and the family legend highlights one family. Exploring stops the tour; it picks up again after 30 seconds without input.
+- **Pause tour:** the button above the map stops the tour until it is pressed again (WCAG 2.2.2).
+- **Drawing:** the map draws only while something moves. Off-screen it stops, and its tour stops with it. Under `prefers-reduced-motion` it is drawn in place, with no fly-in and no tour.
+- **Without JavaScript:** a static SVG of the same map shows instead.
+- **Weight:** the map's data is inline (28 KB, about 11 KB gzipped). The 30 candy pictures (15 KB each on average) load one at a time as the tour reaches them.
+
 ## How it is built
 
 ```
 src/shell.html        markup, copy, CSS, per-ride colour tokens, and the head script that picks the ride
 src/runtime.js        the shared host: canvases, clock, input, pause, fallbacks, footer
 src/engines/*.js      the four rides (test.js is a dev-only smoke test, never shipped)
-src/lab/              generated SVGs for the Sweet Spots card (wordmark, candy map), inlined by <!--include:...-->
+src/lab/              the Sweet Spots card's parts, inlined by <!--include:...-->: the live map (sweet-spots-map.js) and its
+                        data (sweet-spots-data.json), plus generated SVGs (the wordmark, and the map without JavaScript)
 rides.json            the rides that ship
-static/               404.html, favicon.svg/.ico, apple-touch-icon.png, og.png, _headers, _redirects
-build.py              inlines shell + engines + runtime into public/index.html and copies static/ next to it
+static/               404.html, favicon.svg/.ico, apple-touch-icon.png, og.png, _headers, _redirects, and lab/: the
+                        Offbook Chess Archer (offbook-archer-*.webp) and the Sweet Spots candy pictures (sweet-spots/)
+build.py              inlines shell + engines + runtime + src/lab into public/index.html and copies static/ next to it
 public/               what Cloudflare serves: generated, committed, never edited by hand
 tools/                check.py, engine-contract.mjs, serve.mjs, preview.mjs, make-images.mjs, browser.mjs
-tools/lab/            dev-only scripts that regenerate src/lab/ (Archivo outlines; the Sweet Spots page's map data)
+tools/lab/            dev-only scripts that regenerate src/lab/ and static/lab/sweet-spots/ from the Sweet Spots page
 tests/site.test.mjs   browser tests
 docs/ENGINE_API.md    the contract between the runtime and the rides
 docs/reference/       expected screenshots of every ride (desktop and phone frame sheets, full-page layout)
@@ -67,7 +81,8 @@ python3 build.py                   # rebuild public/ after any change to src/ or
 npm run check                      # static checks, no browser: build is fresh, scripts parse, engines honour the
                                    #   contract, no audio, HTML/meta/links, deploy files (~5 s)
 npm test                           # browser tests: each ride on desktop + phone, pause, off-screen sleep, reduced
-                                   #   motion, random pick, "Take another ride", keyboard (~4 min)
+                                   #   motion, the Lab map, random pick, "Take another ride", keyboard (~5 min)
+node tests/site.test.mjs --lab     # the Lab map tests only (~1 min)
 npm run verify                     # check + test
 npm run serve                      # http://127.0.0.1:8788 behaves like Cloudflare Pages (404 page, _headers)
 node tools/preview.mjs --flash     # screenshots of every ride into preview/ + flash-safety scan (~3 min per ride)
@@ -84,7 +99,10 @@ The tests render WebGL in software (SwiftShader) so they run anywhere. That is m
 
 - **Copy:** all text lives in `src/shell.html`, under the `<main>` sections. Edit it, then run `python3 build.py` and `npm run check`.
 - **Talks and Writing:** to bring one back, uncomment its section in `src/shell.html` and its link in the hero nav. Move the `#articles` alias (for old `/#articles` bookmarks) from the Lab heading back to the Writing heading.
-- **Lab cards:** in the Lab section of `src/shell.html`. The Sweet Spots card uses that project's fixed colours and two SVGs from `src/lab/`; when its write-up is published, wrap the card's heading in a link to it.
+- **Lab cards:** in the Lab section of `src/shell.html`.
+  - **Sweet Spots** uses that project's fixed colours and the parts in `src/lab/`. When its write-up is published, wrap the card's heading in a link to it.
+  - **To refresh its map** from a newer Sweet Spots page, save the page and its `img/` folder, then run `python3 tools/lab/sweet_spots_data.py <page.html> --images <folder>` and `python3 tools/lab/sweet_spots_map.py <page.html> src/lab/sweet-spots-map.svg`, then `python3 build.py`.
+  - **Offbook Chess** shows the Archer, `static/lab/offbook-archer-360.webp` and `-720.webp`, made from the original photo. To swap the picture, replace both files (square images) and update the `alt` text.
 - **Site settings:** these are at the top of `build.py`:
   - title;
   - meta description;
@@ -144,7 +162,7 @@ To do at launch:
 Last verified on this build:
 
 - `npm run check`: 8/8 checks pass.
-- `npm test`: 14/14 tests pass, using Chromium 141 with SwiftShader and Playwright 1.64. Codex's review ran Firefox 157 and WebKit 27.2 (48/48) on the build before its follow-up fixes.
+- `npm test`: 17/17 tests pass, using Chromium 141 with SwiftShader and Playwright 1.64. Codex's review ran Firefox 157 and WebKit 27.2 (48/48) on the build before its follow-up fixes and before the live Lab map.
 - Flash scans (3×3 grid, worst flashes in any second; WCAG 2.3.1 allows 3):
 
   | Ride | Normal speed (20 s at 20 fps) | Held to accelerate (20 s at 30 fps) |
@@ -155,4 +173,4 @@ Last verified on this build:
   | Asymptote | 0 | 0 (up to 5×) |
 
   Floating World's barrels reach 3 at normal speed, so its held speed is capped at 2×: uncapped it reached 6, and 2.5× reached 4.
-- Text contrast: everything outside the hero is at least 6.17:1 on every ride (the lowest is the Sweet Spots card's label). The hero text keeps a median of at least 5.5:1 through Many Worlds' ink rifts.
+- Text contrast: everything outside the hero is at least 5.69:1 on every ride (the lowest is the "New candy" label on the Sweet Spots map's tour card). The hero text keeps a median of at least 5.5:1 through Many Worlds' ink rifts.

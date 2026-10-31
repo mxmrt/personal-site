@@ -24,8 +24,9 @@ This is maxmartinelli.com, Max Martinelli's personal site, rebuilt as one static
 npm install && npx playwright install chromium   # once
 python3 build.py              # rebuild public/ from src/ + static/ (deterministic, stdlib only)
 npm run check                 # static checks (~5 s): build freshness, script syntax, engine contract, silence, HTML/meta, deploy files
-npm test                      # browser tests (~4 min): every ride on desktop + phone, pause, off-screen, reduced motion,
-                              #   random pick, "Take another ride", keyboard; one ride: node tests/site.test.mjs --ride=asymptote
+npm test                      # browser tests (~5 min): every ride on desktop + phone, pause, off-screen, reduced motion,
+                              #   the Lab map, random pick, "Take another ride", keyboard
+                              #   one ride: node tests/site.test.mjs --ride=asymptote; the Lab map only: --lab
 node tools/preview.mjs        # screenshots into preview/<ride>/ (add --flash for the flash-safety scan, ~3 min per ride)
 node tools/preview.mjs --ride=<id> --scans-only --flash --hold   # flash scans at normal speed and while held
 npm run serve                 # http://127.0.0.1:8788, served like Cloudflare Pages; add #many-worlds etc. to pick a ride
@@ -44,12 +45,13 @@ The tests and screenshots use software WebGL (SwiftShader), so expect them to be
 src/shell.html       all markup, copy and CSS; per-ride colour tokens; head script that picks the ride before first paint
 src/runtime.js       shared host: canvases + adaptive resolution, clock, seek/play, hold-to-accelerate, pause, fallbacks
 src/engines/*.js     many-worlds, scale-invariant, floating-world, asymptote (test.js: dev-only smoke test, never shipped)
-src/lab/             generated SVGs for the Sweet Spots Lab card, inlined by <!--include:...--> (tools/lab/ regenerates them)
-static/              404.html, icons, og.png, _headers (copied into public/ by build.py)
+src/lab/             the Sweet Spots Lab card's parts, inlined by <!--include:...-->: sweet-spots-map.js (the live map),
+                     sweet-spots-data.json (its data) and two generated SVGs (tools/lab/ regenerates the data and SVGs)
+static/              404.html, icons, og.png, _headers, _redirects, lab/ pictures (copied into public/ by build.py)
 public/              GENERATED: what Cloudflare serves. Never edit by hand
 tools/, tests/       checks, contract test, Pages-like server, screenshot/flash tool, browser tests
 docs/reference/      expected screenshots: <ride>-desktop-frames.png and <ride>-phone-frames.png use the same t values as
-                     preview.mjs; layout-desktop-page.png and layout-phone-page.png show the whole page
+                     preview.mjs; layout-desktop-page.png and layout-phone-page.png show the whole page (Lab map paused)
 ```
 
 ## Review checklist
@@ -71,11 +73,12 @@ docs/reference/      expected screenshots: <ride>-desktop-frames.png and <ride>-
 - **Long sessions:** precision as t grows over hours, especially `mediump` on mobile GPUs, and NaN or Infinity paths.
 - **Allocations:** per-frame allocations that cause garbage-collection stutter.
 - **Ride picking:** with storage blocked (Safari private mode, storage exceptions), with the `#ride` hash, and with "Take another ride".
+- **The Lab map (`src/lab/sweet-spots-map.js`):** its fly-in, tour, Pause tour button, hover and tap, resize, and sleeping off-screen. It has its own loop, separate from the hero's.
 
 ### Accessibility (WCAG 2.2 AA)
 
-- **Pause control:** it works and is labelled correctly (`aria-pressed`, `aria-label`).
-- **Reduced motion:** visitors get a still and no animation loop.
+- **Pause controls:** the hero's works and is labelled correctly (`aria-pressed`, `aria-label`); the Lab map's Pause tour button stops its tour for good.
+- **Reduced motion:** visitors get a still and no animation loop, in the hero and in the Lab map.
 - **Flashing:** no more than 3 flashes per second (`preview.mjs --flash`).
 - **Keyboard:**
   - focus order and visible focus;
@@ -90,8 +93,8 @@ docs/reference/      expected screenshots: <ride>-desktop-frames.png and <ride>-
 - **Load:** time to the poster frame and main-thread work at load.
 - **Shader compile:** stalls on mobile GPUs. Is the warm-up complete?
 - **Adaptive resolution:** how it behaves on phones.
-- **Battery:** the loop must stop when the hero is off-screen or the tab is hidden.
-- **Page weight:** about 196 KB of HTML, about 72 KB gzipped, in one request. This is a deliberate choice.
+- **Battery:** the hero's loop must stop when the hero is off-screen or the tab is hidden, and the Lab map's when it is off-screen.
+- **Page weight:** about 272 KB of HTML, about 100 KB gzipped, in one request. This is a deliberate choice. The Lab map's data is about 11 KB of that; its candy pictures load only during its tour.
 
 ### Cross-browser
 
@@ -125,14 +128,14 @@ Every ride must stay at 3 flashes per second or fewer (WCAG 2.3.1), both at norm
 - **Hero and build:** the animation-heavy hero is the point of the site. The page is one self-contained HTML file with inline JS and CSS, and no framework or bundler.
 - **Copy:** the playful "intern" copy and the one-sentence About are Max's choices.
 - **Hidden sections:** Talks and Writing are commented out in `src/shell.html` on purpose until there's something to show; the `#articles` alias sits on the Lab heading meanwhile.
-- **Lab:** the Sweet Spots card deliberately wears that project's own design (strawberry wrapper, Archivo wordmark as outlines, real map thumbnail), in fixed colours on every ride. Offbook Chess and the monograph say "Coming soon" on purpose.
+- **Lab:** the Sweet Spots card deliberately wears that project's own design (strawberry wrapper, Archivo wordmark as outlines, the project's live map and tour), in fixed colours on every ride. The map tours on its own when it scrolls into view, as it does on the Sweet Spots page; its tour card is a picture only, because this site has no candy pages to open. Offbook Chess and the monograph say "Coming soon" on purpose.
 - **Storage:** `localStorage` and `sessionStorage` only remember which ride to avoid or show next. There are no cookies, analytics or trackers.
 - **No sound:** the site is silent on purpose, and the sound feature was removed. Do not add audio.
 - **No CSP:** `_headers` deliberately sets no Content-Security-Policy, because Cloudflare zone features inject scripts. You may recommend one in `REVIEW.md`, but do not add it.
 - **Many Worlds:** it has five worlds. A sixth, "negative", was removed because it looked too much like "ink". At the ink rifts the hero text snaps between light and dark instead of fading, so it never matches its scrim.
 - **Floating World's 2× held speed:** a flash-safety cap (see above), not a bug.
 - **Retired essay:** `/articles/learning` and its `.html` and trailing-slash forms redirect home on purpose (`static/_redirects`).
-- **Runtime globals:** `window.seek`, `play`, `render`, `DURATION`, `MM_RIDE` and `MM_STILL` stay. The tools use them.
+- **Runtime globals:** `window.seek`, `play`, `render`, `DURATION`, `MM_RIDE`, `MM_STILL` and `MM_FRAMES` (the hero's live frame count) stay. The tools use them, as they do the Lab map's `data-state` attribute.
 
 ## Rules for changes
 
