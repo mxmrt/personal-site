@@ -48,7 +48,7 @@ This file is the contract between `src/runtime.js` and each `src/engines/<id>.js
 
 - **Hint:** "Hold to accelerate" hides on the first press, or once ride time passes `E.hintAt`.
 - **Name entrance:** there is a default. `E.entrance(tw, nm, tg)` overrides it.
-- **Footer:** shows "This visit: `E.title`. `E.caption`" and a "Take another ride" button.
+- **Footer:** the page no longer shows `E.title` and `E.caption` (the footer line that did was removed). Keep providing them: the runtime fills `#ride-name` and `#ride-note` if that line comes back.
 
 ### Fallbacks
 
@@ -66,8 +66,8 @@ window.MM_ENGINES['<id>'] = function (rt) {
   'use strict';
   // all of the ride's state lives in this closure: no globals, no top-level code outside it
   return {
-    id: '<id>', title: 'Asymptote',        // footer: "This visit: Asymptote."
-    caption: 'One plain-text sentence.',   // footer caption, no HTML
+    id: '<id>', title: 'Asymptote',        // the ride's name (#ride-name, if the page has one)
+    caption: 'One plain-text sentence.',   // its caption, no HTML (#ride-note, if the page has one)
     DURATION: 20, T_STILL: 12.4,           // seconds: preview span for the tools; the reduced-motion / poster still
     hintAt: 6,                             // optional: ride seconds before the hint fades
     Q: { pr: 2, scale0: 1 },               // optional: pixel-ratio cap and starting render scale for #gl

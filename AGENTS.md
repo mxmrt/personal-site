@@ -25,7 +25,7 @@ npm install && npx playwright install chromium   # once
 python3 build.py              # rebuild public/ from src/ + static/ (deterministic, stdlib only)
 npm run check                 # static checks (~5 s): build freshness, script syntax, engine contract, silence, HTML/meta, deploy files
 npm test                      # browser tests (~5 min): every ride on desktop + phone, pause, off-screen, reduced motion,
-                              #   the Lab map, random pick, "Take another ride", keyboard
+                              #   the Lab map, random pick, keyboard
                               #   one ride: node tests/site.test.mjs --ride=asymptote; the Lab map only: --lab
 node tools/preview.mjs        # screenshots into preview/<ride>/ (add --flash for the flash-safety scan, ~3 min per ride)
 node tools/preview.mjs --ride=<id> --scans-only --flash --hold   # flash scans at normal speed and while held
@@ -72,7 +72,7 @@ docs/reference/      expected screenshots: <ride>-desktop-frames.png and <ride>-
 - **WebGL context loss and restore:** is it handled per engine?
 - **Long sessions:** precision as t grows over hours, especially `mediump` on mobile GPUs, and NaN or Infinity paths.
 - **Allocations:** per-frame allocations that cause garbage-collection stutter.
-- **Ride picking:** with storage blocked (Safari private mode, storage exceptions), with the `#ride` hash, and with "Take another ride".
+- **Ride picking:** with storage blocked (Safari private mode, storage exceptions), and with the `#ride` hash.
 - **The Lab map (`src/lab/sweet-spots-map.js`):** its fly-in, tour, Pause tour button, hover and tap, resize, and sleeping off-screen. It has its own loop, separate from the hero's.
 
 ### Accessibility (WCAG 2.2 AA)
@@ -129,7 +129,8 @@ Every ride must stay at 3 flashes per second or fewer (WCAG 2.3.1), both at norm
 - **Copy:** the playful "intern" copy and the one-sentence About are Max's choices.
 - **Hidden sections:** Talks and Writing are commented out in `src/shell.html` on purpose until there's something to show; the `#articles` alias sits on the Lab heading meanwhile.
 - **Lab:** the Sweet Spots card deliberately wears that project's own design (strawberry wrapper, Archivo wordmark as outlines, the project's live map and tour), in fixed colours on every ride. The map tours on its own when it scrolls into view, as it does on the Sweet Spots page; its tour card is a picture only, because this site has no candy pages to open. Offbook Chess and the monograph say "Coming soon" on purpose.
-- **Storage:** `localStorage` and `sessionStorage` only remember which ride to avoid or show next. There are no cookies, analytics or trackers.
+- **Storage:** `localStorage` only remembers which ride to avoid next. There are no cookies, analytics or trackers.
+- **Footer:** only "Back to top", on purpose. The ride's name, caption and "Take another ride" were removed.
 - **Desktop layout:** at 1200 px and wider, section headings sit in a left rail; content is capped at 1440 px and left-aligned with the hero's name.
 - **No sound:** the site is silent on purpose, and the sound feature was removed. Do not add audio.
 - **No CSP:** `_headers` deliberately sets no Content-Security-Policy, because Cloudflare zone features inject scripts. You may recommend one in `REVIEW.md`, but do not add it.

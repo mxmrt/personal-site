@@ -32,16 +32,15 @@ The site has no sound.
   - the tab is hidden.
 - **Reduced motion:** with `prefers-reduced-motion`, visitors get a still frame and no loop.
 - **No WebGL:** if WebGL is missing or fails, the poster stays.
-- **Choosing a ride:**
-  - `#many-worlds`, `#scale-invariant`, `#floating-world` or `#asymptote` in the URL forces that ride;
-  - "Take another ride" in the footer reloads into a different one.
-- **Storage:** the only stored data is the last ride shown, in `localStorage`, and the requested next ride, in `sessionStorage`. There are no cookies, analytics or third-party scripts. Google Fonts is the only external request.
+- **Choosing a ride:** `#many-worlds`, `#scale-invariant`, `#floating-world` or `#asymptote` in the URL forces that ride.
+- **Storage:** the only stored data is the last ride shown, in `localStorage`. There are no cookies, analytics or third-party scripts. Google Fonts is the only external request.
 
 ### Layout
 
 - **Phones and tablets:** one column, the full width between the side margins.
 - **Screens 1200 px and wider:** each section's heading sits in a left rail with its content on the right, up to 1440 px in all, aligned with the hero's name.
 - **The Lab:** once it is 860 px wide, the Sweet Spots card switches to its banner's layout, with words on the left and the map on the right (a CSS container query).
+- **Footer:** only "Back to top". The ride's name, its caption and "Take another ride" were removed. The runtime still fills `#ride-name` and `#ride-note` and wires `#again` if they're put back.
 
 ### The Lab's Sweet Spots map
 
@@ -59,7 +58,7 @@ The Sweet Spots card carries the hero map from the Sweet Spots page, ported to t
 
 ```
 src/shell.html        markup, copy, CSS, per-ride colour tokens, and the head script that picks the ride
-src/runtime.js        the shared host: canvases, clock, input, pause, fallbacks, footer
+src/runtime.js        the shared host: canvases, clock, input, pause, fallbacks, in-page links
 src/engines/*.js      the four rides (test.js is a dev-only smoke test, never shipped)
 src/lab/              the Sweet Spots card's parts, inlined by <!--include:...-->: the live map (sweet-spots-map.js) and its
                         data (sweet-spots-data.json), plus generated SVGs (the wordmark, and the map without JavaScript)
@@ -87,7 +86,7 @@ python3 build.py                   # rebuild public/ after any change to src/ or
 npm run check                      # static checks, no browser: build is fresh, scripts parse, engines honour the
                                    #   contract, no audio, HTML/meta/links, deploy files (~5 s)
 npm test                           # browser tests: each ride on desktop + phone, pause, off-screen sleep, reduced
-                                   #   motion, the Lab map, random pick, "Take another ride", keyboard (~5 min)
+                                   #   motion, the Lab map, random pick, keyboard (~5 min)
 node tests/site.test.mjs --lab     # the Lab map tests only (~1 min)
 npm run verify                     # check + test
 npm run serve                      # http://127.0.0.1:8788 behaves like Cloudflare Pages (404 page, _headers)
@@ -169,7 +168,7 @@ To do at launch:
 Last verified on this build:
 
 - `npm run check`: 8/8 checks pass.
-- `npm test`: 17/17 tests pass, using Chromium 141 with SwiftShader and Playwright 1.64. Codex's review ran Firefox 157 and WebKit 27.2 (48/48) on the build before its follow-up fixes and before the live Lab map.
+- `npm test`: 16/16 tests pass, using Chromium 141 with SwiftShader and Playwright 1.64. Codex's review ran Firefox 157 and WebKit 27.2 (48/48) on the build before its follow-up fixes and before the live Lab map.
 - Flash scans (3×3 grid, worst flashes in any second; WCAG 2.3.1 allows 3):
 
   | Ride | Normal speed (20 s at 20 fps) | Held to accelerate (20 s at 30 fps) |

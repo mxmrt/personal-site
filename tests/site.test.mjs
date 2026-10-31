@@ -86,12 +86,10 @@ for (const vp of VIEWPORTS) for (const id of ONLY) {
     try {
       await page.waitForSelector('#gl.on', { timeout: 30000 }).catch(() => { throw new Error('WebGL canvas never faded in (the ride fell back to its poster)'); });
       const s = await page.evaluate(() => ({
-        ride: window.MM_RIDE, attr: document.documentElement.dataset.ride, name: document.getElementById('ride-name').textContent,
-        note: document.getElementById('ride-note').textContent, overflow: document.documentElement.scrollWidth > innerWidth,
+        ride: window.MM_RIDE, attr: document.documentElement.dataset.ride, overflow: document.documentElement.scrollWidth > innerWidth,
         sound: !!document.getElementById('sd'), buttons: document.querySelectorAll('.btns button').length,
       }));
       expect(s.ride === id && s.attr === id, `expected ride ${id}, got ${s.ride} / data-ride=${s.attr}`);
-      expect(s.name && s.name !== 'the ride' && s.note.length > 20, 'footer should name the ride and carry its caption');
       expect(!s.overflow, 'page scrolls horizontally');
       expect(!s.sound && s.buttons === 1, 'hero controls should be exactly one Pause button');
       expect(await framesFlow(page), 'animation loop is not running');
@@ -215,17 +213,6 @@ if (!opt.quick && !opt.ride && !opt.lab) await test('random pick: 24 visits, nev
   const repeats = seen.filter((r, i) => i && r === seen[i - 1]).length;
   expect(repeats === 0, 'consecutive repeats in ' + seen.join(' '));
   expect(RIDES.every((r) => seen.includes(r)), 'not every ride appeared: ' + seen.join(' '));
-});
-
-if (!opt.lab) await test('"Take another ride" reloads into a different ride and drops the #ride hash', async () => {
-  const { ctx, page, bad } = await open(VIEWPORTS[0], { reducedMotion: 'reduce', hash: '#asymptote' });
-  try {
-    await Promise.all([page.waitForEvent('load'), page.click('#again')]);
-    const s = await page.evaluate(() => ({ ride: document.documentElement.dataset.ride, hash: location.hash }));
-    expect(s.ride && s.ride !== 'asymptote' && RIDES.includes(s.ride), 'got ' + s.ride);
-    expect(s.hash === '', 'hash should be cleared, got ' + s.hash);
-    expect(!bad.length, bad.join('\n'));
-  } finally { await ctx.close(); }
 });
 
 if (!opt.lab) await test('keyboard: skip link first, in-page nav moves focus to the section', async () => {

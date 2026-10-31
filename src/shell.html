@@ -168,12 +168,9 @@ section{display:grid;grid-template-columns:minmax(260px,3fr) minmax(0,9fr);colum
 section>h2{grid-column:1;grid-row:1/span 9;margin:0}
 section>:not(h2){grid-column:2}
 }
-.foot{padding-block:28px 48px;border-top:1px solid var(--rule);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:16px 32px;font:400 12px/1.6 var(--fm);color:var(--mut)}
-.foot .ride{display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:66ch}
-.foot p{margin:0}
-.foot b{font-weight:600;color:var(--ink)}
-.foot a,.foot .again{display:inline-flex;align-items:center;min-height:44px;padding:0;color:var(--ink);text-decoration:none;border:0;border-bottom:1px solid var(--acc);background:none;font:inherit;cursor:pointer}
-.foot a:hover,.foot .again:hover{color:var(--hov)}
+.foot{padding-block:20px 40px;border-top:1px solid var(--rule);display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:flex-start;gap:16px 32px;font:400 12px/1.6 var(--fm);color:var(--mut)}
+.foot a{display:inline-flex;align-items:center;min-height:44px;padding:0;color:var(--ink);text-decoration:none;border:0;border-bottom:1px solid var(--acc);background:none;font:inherit;cursor:pointer}
+.foot a:hover{color:var(--hov)}
 @media (prefers-reduced-motion:reduce){#gl,.hint{transition:none}}
 </style>
 <script>
@@ -262,10 +259,6 @@ section>:not(h2){grid-column:2}
 </div>
 </main>
 <footer class="wrap foot">
-<div class="ride">
-<p>This visit: <b id="ride-name">the ride</b>. <span id="ride-note"></span></p>
-<button class="again" id="again" type="button">Take another ride</button>
-</div>
 <a href="#top">Back to top</a>
 </footer>
 <!--ENGINES-->
