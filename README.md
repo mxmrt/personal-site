@@ -3,7 +3,9 @@
 maxmartinelli.com is a single static page.
 
 - **The hero:** one of four animated "rides". The page picks one at random on every visit, never repeating the ride from the visitor's last visit.
-- **Everything else is shared:** the name, tagline, About, Talks, Writing, Podcast, Lab, Contact and footer stay the same; only the animation and its colours change.
+- **Everything else is shared:** the name, tagline, About, Podcast, Lab, Contact and footer stay the same; only the animation and its colours change.
+- **Hidden for now:** Talks and Writing are written but commented out in `src/shell.html` until there's something to show.
+- **The Lab:** Sweet Spots (in progress) in its own project's look, then Offbook Chess and the CAS game theory monograph (both coming soon).
 - **Interaction:** holding anywhere on the hero accelerates the ride (up to 5×; Floating World tops out at 2× for flash safety), and a Pause button stops it.
 - **Delivery:** `public/` holds one self-contained `index.html` (all CSS and JS inline) plus a 404 page, icons and a social image. Cloudflare serves it as static files, with no server code.
 
@@ -41,11 +43,13 @@ The site has no sound.
 src/shell.html        markup, copy, CSS, per-ride colour tokens, and the head script that picks the ride
 src/runtime.js        the shared host: canvases, clock, input, pause, fallbacks, footer
 src/engines/*.js      the four rides (test.js is a dev-only smoke test, never shipped)
+src/lab/              generated SVGs for the Sweet Spots card (wordmark, candy map), inlined by <!--include:...-->
 rides.json            the rides that ship
 static/               404.html, favicon.svg/.ico, apple-touch-icon.png, og.png, _headers, _redirects
 build.py              inlines shell + engines + runtime into public/index.html and copies static/ next to it
 public/               what Cloudflare serves: generated, committed, never edited by hand
 tools/                check.py, engine-contract.mjs, serve.mjs, preview.mjs, make-images.mjs, browser.mjs
+tools/lab/            dev-only scripts that regenerate src/lab/ (Archivo outlines; the Sweet Spots page's map data)
 tests/site.test.mjs   browser tests
 docs/ENGINE_API.md    the contract between the runtime and the rides
 docs/reference/       expected screenshots of every ride (desktop and phone frame sheets, full-page layout)
@@ -79,6 +83,8 @@ The tests render WebGL in software (SwiftShader) so they run anywhere. That is m
 ## Editing
 
 - **Copy:** all text lives in `src/shell.html`, under the `<main>` sections. Edit it, then run `python3 build.py` and `npm run check`.
+- **Talks and Writing:** to bring one back, uncomment its section in `src/shell.html` and its link in the hero nav. Move the `#articles` alias (for old `/#articles` bookmarks) from the Lab heading back to the Writing heading.
+- **Lab cards:** in the Lab section of `src/shell.html`. The Sweet Spots card uses that project's fixed colours and two SVGs from `src/lab/`; when its write-up is published, wrap the card's heading in a link to it.
 - **Site settings:** these are at the top of `build.py`:
   - title;
   - meta description;
@@ -149,4 +155,4 @@ Last verified on this build:
   | Asymptote | 0 | 0 (up to 5×) |
 
   Floating World's barrels reach 3 at normal speed, so its held speed is capped at 2×: uncapped it reached 6, and 2.5× reached 4.
-- Text contrast: everything outside the hero is at least 4.77:1 on every ride. The hero text keeps a median of at least 5.5:1 through Many Worlds' ink rifts.
+- Text contrast: everything outside the hero is at least 6.17:1 on every ride (the lowest is the Sweet Spots card's label). The hero text keeps a median of at least 5.5:1 through Many Worlds' ink rifts.

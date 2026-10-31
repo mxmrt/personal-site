@@ -44,6 +44,7 @@ The tests and screenshots use software WebGL (SwiftShader), so expect them to be
 src/shell.html       all markup, copy and CSS; per-ride colour tokens; head script that picks the ride before first paint
 src/runtime.js       shared host: canvases + adaptive resolution, clock, seek/play, hold-to-accelerate, pause, fallbacks
 src/engines/*.js     many-worlds, scale-invariant, floating-world, asymptote (test.js: dev-only smoke test, never shipped)
+src/lab/             generated SVGs for the Sweet Spots Lab card, inlined by <!--include:...--> (tools/lab/ regenerates them)
 static/              404.html, icons, og.png, _headers (copied into public/ by build.py)
 public/              GENERATED: what Cloudflare serves. Never edit by hand
 tools/, tests/       checks, contract test, Pages-like server, screenshot/flash tool, browser tests
@@ -122,7 +123,9 @@ Every ride must stay at 3 flashes per second or fewer (WCAG 2.3.1), both at norm
 ## Intentional choices (do not report these as problems)
 
 - **Hero and build:** the animation-heavy hero is the point of the site. The page is one self-contained HTML file with inline JS and CSS, and no framework or bundler.
-- **Copy:** the playful "intern" copy and the three "Open slot" Lab placeholders are Max's choices.
+- **Copy:** the playful "intern" copy and the one-sentence About are Max's choices.
+- **Hidden sections:** Talks and Writing are commented out in `src/shell.html` on purpose until there's something to show; the `#articles` alias sits on the Lab heading meanwhile.
+- **Lab:** the Sweet Spots card deliberately wears that project's own design (strawberry wrapper, Archivo wordmark as outlines, real map thumbnail), in fixed colours on every ride. Offbook Chess and the monograph say "Coming soon" on purpose.
 - **Storage:** `localStorage` and `sessionStorage` only remember which ride to avoid or show next. There are no cookies, analytics or trackers.
 - **No sound:** the site is silent on purpose, and the sound feature was removed. Do not add audio.
 - **No CSP:** `_headers` deliberately sets no Content-Security-Policy, because Cloudflare zone features inject scripts. You may recommend one in `REVIEW.md`, but do not add it.
