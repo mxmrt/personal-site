@@ -128,6 +128,8 @@ h3{font-size:1.28rem;line-height:1.15;font-stretch:108%;font-weight:720;letter-s
 .hm-title{font-size:1rem;font-stretch:108%;font-weight:720;line-height:1.25}
 .hm-hint{font-size:.84rem;color:var(--ink-3);line-height:1.3}
 .hm-box{position:relative;aspect-ratio:1.5;max-width:100%}
+/* desktop: the map fills the full height of the hero's left column instead of stopping at a fixed 3:2 box */
+@media (min-width:861px){.hero .hero-map{align-self:stretch;grid-template-rows:auto minmax(0,1fr) auto}.hm-box{aspect-ratio:auto;height:auto;min-height:440px}}
 #heroCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
 .hm-legend{display:flex;flex-wrap:wrap;gap:0 14px;border-top:1px solid var(--line);padding-top:6px}
 .hm-legend .fam{touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:5px 0}
