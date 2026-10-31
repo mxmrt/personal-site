@@ -104,6 +104,10 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 .ss .c1{top:7px;left:7px;border-top-width:1.5px;border-left-width:1.5px}.ss .c2{top:7px;right:7px;border-top-width:1.5px;border-right-width:1.5px}
 .ss .c3{bottom:7px;left:7px;border-bottom-width:1.5px;border-left-width:1.5px}.ss .c4{bottom:7px;right:7px;border-bottom-width:1.5px;border-right-width:1.5px}
 @media (max-width:640px){.slot.ss{grid-template-columns:1fr;grid-template-areas:"sl" "mark" "map" "sd";grid-template-rows:auto;padding:24px 18px 20px}}
+/* Offbook Chess shows its first piece, the Archer: the photo fills the card's right side and fades into the card */
+.slot.oc{display:grid;grid-template-columns:minmax(0,1fr) clamp(120px,36%,200px);gap:0;min-height:200px;padding:0;overflow:hidden}
+.oc-t{display:flex;flex-direction:column;justify-content:space-between;gap:24px;min-width:0;padding:14px 0 16px 16px}
+.oc-pic{display:block;width:100%;height:100%;object-fit:cover;object-position:40% 50%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 30%);mask-image:linear-gradient(90deg,transparent,#000 30%)}
 @media (max-width:560px){.slots{grid-template-columns:1fr}}
 .foot{padding-block:28px 48px;border-top:1px solid var(--rule);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:16px 32px;font:400 12px/1.6 var(--fm);color:var(--mut)}
 .foot .ride{display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:66ch}
@@ -184,7 +188,7 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 <p class="sd">We mapped 404 real candies, had Claude and OpenAI’s Codex find the empty space between them, and designed new candies to fill it. Candy is the rehearsal for insurance filings.</p>
 <div class="ss-sheet" aria-hidden="true"><p class="ss-cap">Claude’s map of the 404 real candies</p><!--include:lab/sweet-spots-map.svg--><p class="ss-key"><span><i></i>Real candy</span><span><i class="kr"></i>Empty spot</span><span><i class="kd"></i>New candy</span></p></div>
 </li>
-<li class="slot"><span class="sl">Coming soon</span><h3>Offbook Chess</h3></li>
+<li class="slot oc"><div class="oc-t"><span class="sl">Coming soon</span><h3>Offbook Chess</h3></div><img class="oc-pic" src="lab/offbook-archer-360.webp" srcset="lab/offbook-archer-360.webp 360w, lab/offbook-archer-720.webp 720w" sizes="230px" width="720" height="720" loading="lazy" decoding="async" alt="The Archer, an Offbook Chess piece: an ivory braided column with a bow and an arrow pointing up, on a bell-shaped base"></li>
 <li class="slot"><span class="sl">Coming soon</span><div><h3>Game Theory Monograph</h3><p class="sd">A CAS monograph on game theory and its applications in insurance, led by Agni Chatterjee with Betty Zhu and me.</p><a class="sa" href="https://www.casact.org/article/new-cas-monographs-explore-strategy-competition-and-extreme-risk" rel="noopener">Read the CAS announcement</a></div></li>
 </ul>
 </section>
