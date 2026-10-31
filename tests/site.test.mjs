@@ -43,12 +43,15 @@ async function open(vp, { reducedMotion = 'no-preference', hash = '' } = {}) {
   await page.goto(site.url + '/' + hash, { waitUntil: 'load' });
   return { ctx, page, bad };
 }
+/* rafOver counts every animation frame the page asks for (the hero and the Lab map); heroFramesOver counts the
+   hero's live frames only (window.MM_FRAMES, counted by the runtime) */
 const rafOver = async (page, ms) => { await page.evaluate(() => { window.__raf = 0; }); await sleep(ms); return page.evaluate(() => window.__raf); };
-/* wait until the loop has delivered n frames. Software WebGL (SwiftShader) can stall for several seconds while it
-   compiles a ride's shaders, Floating World most of all, so the window is generous; a real GPU needs milliseconds */
+const heroFramesOver = async (page, ms) => { await page.evaluate(() => { window.MM_FRAMES = 0; }); await sleep(ms); return page.evaluate(() => window.MM_FRAMES); };
+/* wait until the hero's loop has delivered n frames. Software WebGL (SwiftShader) can stall for several seconds while
+   it compiles a ride's shaders, Floating World most of all, so the window is generous; a real GPU needs milliseconds */
 async function framesFlow(page, n = 3, ms = 30000) {
-  await page.evaluate(() => { window.__raf = 0; });
-  try { await page.waitForFunction((n) => window.__raf >= n, n, { timeout: ms, polling: 100 }); return true; } catch { return false; }
+  await page.evaluate(() => { window.MM_FRAMES = 0; });
+  try { await page.waitForFunction((n) => window.MM_FRAMES >= n, n, { timeout: ms, polling: 100 }); return true; } catch { return false; }
 }
 
 async function test(name, fn) {
@@ -100,14 +103,14 @@ for (const vp of VIEWPORTS) for (const id of ONLY) {
       // pause stops the loop, play resumes it
       await page.click('#pz');
       expect(await page.getAttribute('#pz', 'aria-pressed') === 'true', 'Pause should set aria-pressed=true');
-      expect((await rafOver(page, 1000)) <= 1, 'animation keeps running while paused');
+      expect((await heroFramesOver(page, 1000)) <= 1, 'animation keeps running while paused');
       await page.click('#pz');
       expect(await page.getAttribute('#pz', 'aria-label') === 'Pause animation', 'Play should restore the Pause label');
       expect(await framesFlow(page), 'animation did not resume after Play');
       // scrolled away, the loop sleeps
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       await sleep(500);
-      expect((await rafOver(page, 1000)) <= 2, 'animation keeps running with the hero off-screen');
+      expect((await heroFramesOver(page, 1000)) <= 2, 'animation keeps running with the hero off-screen');
       await page.evaluate(() => window.scrollTo(0, 0));
       const audio = await page.evaluate(() => window.__audio);
       expect(audio.length === 0, 'audio API used: ' + audio.join(', '));

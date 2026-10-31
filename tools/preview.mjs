@@ -124,11 +124,11 @@ for (const id of IDS) {
     if (f.sw > f.cw + 1) problem(`[${vp.name}] horizontal overflow: ${f.sw}px wide in a ${f.cw}px viewport`);
     if (f.hidden.length) warn(`[${vp.name}] text not visible at rest: ${f.hidden.join(' | ')}`);
     if (!f.seek || typeof f.dur !== 'number') problem(`[${vp.name}] window.seek(t) / window.DURATION missing`);
-    await page.evaluate(() => { window.__raf = 0; }); await sleep(2000);
-    report.info[vp.name].framesPerSecondAtTop = Math.round((await page.evaluate(() => window.__raf)) / 2);
+    await page.evaluate(() => { window.MM_FRAMES = 0; }); await sleep(2000);   // MM_FRAMES: the hero's live frames
+    report.info[vp.name].framesPerSecondAtTop = Math.round((await page.evaluate(() => window.MM_FRAMES)) / 2);
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight)); await sleep(600);
-    await page.evaluate(() => { window.__raf = 0; }); await sleep(1000);
-    const off = await page.evaluate(() => window.__raf);
+    await page.evaluate(() => { window.MM_FRAMES = 0; }); await sleep(1000);
+    const off = await page.evaluate(() => window.MM_FRAMES);
     report.info[vp.name].framesPerSecondOffScreen = off;
     if (off > 8) problem(`[${vp.name}] animation keeps running with the hero off-screen (${off} frames/s)`);
     if (!opts.quick) {

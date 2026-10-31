@@ -127,6 +127,7 @@ const running = () => mode === 'live' && !paused && inView && !D.hidden && glOK 
 function frame(now) {
   rafId = 0;
   if (!running()) return;
+  window.MM_FRAMES = (window.MM_FRAMES | 0) + 1; // live hero frames, for the tests and tools (the Lab map runs its own loop)
   const dms = lastNow ? now - lastNow : 16.7, dt = Math.min(0.25, dms / 1000); lastNow = now;
   adapt(dms, now); // resize before drawing: a resize after the draw would present a cleared (black) frame
   lean += (leanT - lean) * (1 - Math.exp(-dt / 0.18));
@@ -179,6 +180,7 @@ window.seek = function (t) {
 window.play = function () { if (mode === 'manual') { tLive = tSeek; mode = 'live'; if (glOK) sizeCanvas(scale); } kickLoop(); };
 window.render = (t) => render(+t || 0);
 window.MM_RIDE = RIDE; window.MM_STILL = T_STILL; // which ride loaded, and its still frame (tools/make-images.mjs)
+window.MM_FRAMES = 0;
 
 /* ---------- pause, visibility, resize ---------- */
 pz.addEventListener('click', () => {
