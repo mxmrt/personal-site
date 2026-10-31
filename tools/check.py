@@ -2,18 +2,20 @@
 """Static checks for the site: no browser and no npm packages needed (Node is used when present).
 
   1. public/ is a fresh build of src/ and static/ (build.py --check)
-  2. every inline <script> in public/index.html parses (node --check)
+  2. every inline <script> in public/index.html parses (node --check; JSON data blocks with a JSON parser)
   3. every ride engine honours docs/ENGINE_API.md (tools/engine-contract.mjs)
   4. the site is silent: no audio or video APIs in src/ or public/
   5. HTML basics: doctype, lang, charset, viewport, title, description, social tags, one h1, unique ids, in-page
      links resolve, buttons and links have names, external links use https, no inline event handlers, no external
-     scripts, Google Fonts is the only external stylesheet, no dev-only ride or build placeholders shipped
-  6. deploy files: 404.html, icons, og.png at 1200x630, and _headers within Cloudflare's limits
+     scripts, Google Fonts is the only external stylesheet, no dev-only ride or build placeholders shipped,
+     images have alt text and a size, and every local image the page uses exists in public/
+  6. deploy files: 404.html, icons, og.png at 1200x630, _headers and _redirects within Cloudflare's limits, and
+     every Sweet Spots picture the Lab map can show
   7. size of index.html, raw and gzipped
 
 usage: python3 tools/check.py        exit 0 when nothing FAILs (WARN lines are advisory)
 """
-import gzip, os, re, shutil, struct, subprocess, sys, tempfile
+import gzip, json, os, re, shutil, struct, subprocess, sys, tempfile
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -50,7 +52,7 @@ class Page(HTMLParser):
         node = {'tag': tag, 'attrs': a, 'text': ''}
         self.tags.append(node)
         if 'id' in a: self.ids.append(a['id'])
-        if tag == 'script': self._script = []
+        if tag == 'script': self._script = []; self._sattrs = a
         if tag not in ('meta', 'link', 'br', 'img', 'input', 'source', 'rect', 'path'): self.stack.append(node)
 
     def handle_startendtag(self, tag, attrs):
@@ -59,7 +61,8 @@ class Page(HTMLParser):
 
     def handle_endtag(self, tag):
         if tag == 'script' and self._script is not None:
-            self.scripts.append(''.join(self._script)); self._script = None
+            self.scripts.append({'type': self._sattrs.get('type', ''), 'id': self._sattrs.get('id'), 'text': ''.join(self._script)})
+            self._script = None
         for i in range(len(self.stack) - 1, -1, -1):
             if self.stack[i]['tag'] == tag: del self.stack[i:]; break
 
@@ -88,16 +91,21 @@ def main():
     html = read(index)
     page = Page(); page.feed(html); page.close()
 
-    # 2. script syntax
+    # 2. script syntax (JSON data blocks are parsed as JSON, the rest by node)
+    code = [s['text'] for s in page.scripts if s['type'] != 'application/json']
+    data = {s['id']: s['text'] for s in page.scripts if s['type'] == 'application/json'}
+    bad = 0
+    for k, text in data.items():
+        try: data[k] = json.loads(text)
+        except ValueError as e: bad += 1; fail('inline JSON #%s does not parse: %s' % (k, e))
     if node:
-        bad = 0
         with tempfile.TemporaryDirectory() as tmp:
-            for i, s in enumerate(page.scripts):
+            for i, s in enumerate(code):
                 p = os.path.join(tmp, 'script%d.js' % i)
                 with open(p, 'w', encoding='utf-8') as f: f.write(s)
                 r = subprocess.run([node, '--check', p], capture_output=True, text=True)
                 if r.returncode: bad += 1; fail('inline script #%d does not parse: %s' % (i, r.stderr.strip().splitlines()[-1] if r.stderr.strip() else '?'))
-        if not bad: ok('all %d inline scripts parse' % len(page.scripts))
+        if not bad: ok('all %d inline scripts and %d JSON data block%s parse' % (len(code), len(data), '' if len(data) == 1 else 's'))
     else:
         warn('node not found: skipped script syntax and engine contract checks')
 
@@ -121,7 +129,7 @@ def main():
                     if audio.search(line): hits.append('%s:%d' % (os.path.relpath(os.path.join(base, n), ROOT), ln))
     if audio.search(html): hits.append('public/index.html')
     (fail if hits else ok)('no audio or video APIs' + (': found in ' + ', '.join(hits) if hits else ''))
-    dbg = [m.group(0) for m in re.finditer(r'console\.(log|debug)\(|\bdebugger\b', '\n'.join(page.scripts))]
+    dbg = [m.group(0) for m in re.finditer(r'console\.(log|debug)\(|\bdebugger\b', '\n'.join(code))]
     (warn if dbg else ok)('no console.log/debugger left in scripts' if not dbg else 'debug statements in scripts: %d' % len(dbg))
 
     # 5. HTML basics
@@ -168,7 +176,13 @@ def main():
             if not (t['text'].strip() or a.get('aria-label')): problems.append('link without a name: ' + str(href))
             if a.get('target') == '_blank' and 'noopener' not in (a.get('rel') or ''): problems.append('target=_blank without rel=noopener: ' + str(href))
         if t['tag'] == 'button' and not (t['text'].strip() or a.get('aria-label')): problems.append('button without a name (id=%s)' % a.get('id'))
-        if t['tag'] == 'img' and 'alt' not in a: problems.append('<img> without alt')
+        if t['tag'] == 'img':
+            if 'alt' not in a: problems.append('<img> without alt')
+            if not (a.get('width') and a.get('height')): problems.append('<img> without width and height (layout shift): ' + str(a.get('src')))
+            urls = [a.get('src') or ''] + [c.strip().split()[0] for c in (a.get('srcset') or '').split(',') if c.strip()]
+            for u in urls:
+                if u and not re.match(r'(https?:|data:)', u) and not os.path.isfile(os.path.join(PUB, *u.lstrip('/').split('?')[0].split('/'))):
+                    problems.append('<img> source missing from public/: ' + u)
     for token in ('__RIDES__', '<!--ENGINES-->', '<!--RUNTIME-->'):
         if token in html: problems.append('build placeholder %s left in the page' % token)
     if re.search(r"MM_ENGINES\[['\"]test['\"]\]", html): problems.append('the dev-only test ride is in the page')
@@ -196,6 +210,10 @@ def main():
             lines = [l.strip() for l in read(red).splitlines() if l.strip() and not l.strip().startswith('#')]
             okline = lambda f: 2 <= len(f) <= 3 and f[0].startswith('/') and (len(f) == 2 or f[2] in ('200', '301', '302', '303', '307', '308'))
             if len(lines) > 2100 or any(len(l) > 1000 or not okline(l.split()) for l in lines): bad.append('_redirects ("source destination [code]" per line)')
+        lab = data.get('ss-data')
+        if isinstance(lab, dict):   # the live Sweet Spots map shows lab/sweet-spots/<id>.webp for each new candy
+            gone = [p[5] for p in lab.get('new', []) if not os.path.isfile(os.path.join(PUB, 'lab', 'sweet-spots', p[5] + '.webp'))]
+            if gone: bad.append('Sweet Spots pictures missing: ' + ', '.join(gone[:3]) + (' and %d more' % (len(gone) - 3) if len(gone) > 3 else ''))
         (fail if bad else ok)('deploy files present and valid' if not bad else 'deploy files wrong: ' + ', '.join(bad))
 
     # 7. size

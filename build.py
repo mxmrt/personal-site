@@ -2,7 +2,9 @@
 """Build maxmartinelli.com from src/ into public/, the folder Cloudflare serves.
 
 The page is one self-contained index.html: the shell (layout, content, CSS), the four ride engines and the shared
-runtime, all inline. <!--include:path--> in the shell pulls in a file from src/ (the Lab's generated SVGs). static/ holds the files copied next to it (404 page, icons, social image, _headers).
+runtime, all inline. <!--include:path--> in the shell pulls in a file from src/ (the Lab's generated SVGs, scripts
+and data). static/ holds the files copied next to it, folders included (404 page, icons, social image, _headers and
+_redirects, the Lab's pictures).
 The build is deterministic, so `--check` can prove public/ matches src/.
 
 usage:
@@ -37,11 +39,28 @@ def read(*parts):
 
 
 def include(m):
-    """<!--include:lab/x.svg--> in the shell is replaced by src/lab/x.svg (for long generated markup)."""
+    """<!--include:lab/x.svg--> in the shell is replaced by src/lab/x.svg (long generated markup, scripts and data)."""
     rel = m.group(1)
     if '..' in rel.split('/') or not os.path.isfile(os.path.join(HERE, 'src', rel)):
         sys.exit('src/shell.html includes a missing file: src/' + rel)
-    return read('src', *rel.split('/')).strip()
+    text = read('src', *rel.split('/')).strip()
+    if rel.endswith(('.js', '.json')) and ('</script' in text.lower() or '<!--' in text):
+        sys.exit('src/%s contains "</script" or "<!--" and would break its inline <script>' % rel)
+    return text
+
+
+def static_files():
+    """every file under static/, as sorted paths relative to it (dotfiles and dot-folders skipped)."""
+    base, out = os.path.join(HERE, 'static'), []
+    for d, dirs, files in os.walk(base):
+        dirs[:] = sorted(x for x in dirs if not x.startswith('.'))
+        out += [os.path.relpath(os.path.join(d, n), base).replace(os.sep, '/') for n in sorted(files) if not n.startswith('.')]
+    return sorted(out)
+
+
+def tree(root):
+    """every file under root, as relative paths."""
+    return {os.path.relpath(os.path.join(d, n), root).replace(os.sep, '/') for d, _, files in os.walk(root) for n in files}
 
 
 def fragment(ids):
@@ -116,11 +135,10 @@ def build_public(out_dir):
     os.makedirs(out_dir)
     page = web_page(fragment(RIDES))
     write(os.path.join(out_dir, 'index.html'), page)
-    static = os.path.join(HERE, 'static')
-    for name in sorted(os.listdir(static)):
-        src = os.path.join(static, name)
-        if os.path.isfile(src) and not name.startswith('.'):
-            shutil.copyfile(src, os.path.join(out_dir, name))
+    for rel in static_files():
+        dst = os.path.join(out_dir, *rel.split('/'))
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copyfile(os.path.join(HERE, 'static', *rel.split('/')), dst)
     return page
 
 
@@ -129,7 +147,7 @@ def check_public():
     with tempfile.TemporaryDirectory() as tmp:
         fresh = os.path.join(tmp, 'public')
         build_public(fresh)
-        a = set(os.listdir(fresh)); b = set(os.listdir(pub)) if os.path.isdir(pub) else set()
+        a = tree(fresh); b = tree(pub) if os.path.isdir(pub) else set()
         stale = sorted(a ^ b) + sorted(n for n in a & b if not filecmp.cmp(os.path.join(fresh, n), os.path.join(pub, n), shallow=False))
     if stale:
         print('public/ is stale (differs from a fresh build): ' + ', '.join(stale))
@@ -169,9 +187,10 @@ def main(argv):
         print('wrote %s (%.1f KB artifact fragment)' % (artifact, len(frag.encode('utf-8')) / 1024))
         return 0
     page = build_public(os.path.join(HERE, 'public'))
-    print('wrote public/index.html (%.1f KB) rides=%s, plus %s' % (
-        len(page.encode('utf-8')) / 1024, ','.join(RIDES),
-        ', '.join(sorted(n for n in os.listdir(os.path.join(HERE, 'static')) if not n.startswith('.')))))
+    files = static_files()
+    top = sorted({f.split('/')[0] + ('/' if '/' in f else '') for f in files})
+    print('wrote public/index.html (%.1f KB) rides=%s, plus %d static files: %s' % (
+        len(page.encode('utf-8')) / 1024, ','.join(RIDES), len(files), ', '.join(top)))
     return 0
 
 
