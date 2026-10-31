@@ -24,8 +24,8 @@ with open(os.path.join(HERE, 'rides.json'), encoding='utf-8') as _f:
 # ---- site settings: edit these, then rebuild ----
 SITE_URL = 'https://maxmartinelli.com'   # canonical host (the apex answers; www has no DNS record): canonical, og:url, og:image
 TITLE = 'Max Martinelli'
-DESCRIPTION = ('Max Martinelli, career intern who likes AI and insurance: talks, writing, '
-               'the Almost Nowhere podcast and experiments.')
+DESCRIPTION = ('Max Martinelli, career intern who likes AI and insurance: the Almost Nowhere podcast '
+               'and lab experiments, starting with Sweet Spots.')
 OG_IMAGE_ALT = 'The name Max Martinelli over a starbow of light streaks, a frame from the site’s animated hero'
 THEME_COLOR = '#050A1A'
 HERO_MARKER = '<header class="hero"'   # the shell's first body element; everything before it goes in <head>
