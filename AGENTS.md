@@ -130,6 +130,7 @@ Every ride must stay at 3 flashes per second or fewer (WCAG 2.3.1), both at norm
 - **Hidden sections:** Talks and Writing are commented out in `src/shell.html` on purpose until there's something to show; the `#articles` alias sits on the Lab heading meanwhile.
 - **Lab:** the Sweet Spots card deliberately wears that project's own design (strawberry wrapper, Archivo wordmark as outlines, the project's live map and tour), in fixed colours on every ride. The map tours on its own when it scrolls into view, as it does on the Sweet Spots page; its tour card is a picture only, because this site has no candy pages to open. Offbook Chess and the monograph say "Coming soon" on purpose.
 - **Storage:** `localStorage` and `sessionStorage` only remember which ride to avoid or show next. There are no cookies, analytics or trackers.
+- **Desktop layout:** at 1200 px and wider, section headings sit in a left rail; content is capped at 1440 px and left-aligned with the hero's name.
 - **No sound:** the site is silent on purpose, and the sound feature was removed. Do not add audio.
 - **No CSP:** `_headers` deliberately sets no Content-Security-Policy, because Cloudflare zone features inject scripts. You may recommend one in `REVIEW.md`, but do not add it.
 - **Many Worlds:** it has five worlds. A sixth, "negative", was removed because it looked too much like "ink". At the ink rifts the hero text snaps between light and dark instead of fading, so it never matches its scrim.

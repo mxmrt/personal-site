@@ -37,6 +37,12 @@ The site has no sound.
   - "Take another ride" in the footer reloads into a different one.
 - **Storage:** the only stored data is the last ride shown, in `localStorage`, and the requested next ride, in `sessionStorage`. There are no cookies, analytics or third-party scripts. Google Fonts is the only external request.
 
+### Layout
+
+- **Phones and tablets:** one column, the full width between the side margins.
+- **Screens 1200 px and wider:** each section's heading sits in a left rail with its content on the right, up to 1440 px in all, aligned with the hero's name.
+- **The Lab:** once it is 860 px wide, the Sweet Spots card switches to its banner's layout, with words on the left and the map on the right (a CSS container query).
+
 ### The Lab's Sweet Spots map
 
 The Sweet Spots card carries the hero map from the Sweet Spots page, ported to this site: Claude's map of 404 real candies (dots in their family colours), the 11 spots that stayed empty (dashed rings) and the 30 new candies (diamonds; filled for tier A).

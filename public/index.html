@@ -86,12 +86,12 @@ a{color:inherit}
 /* content */
 .wrap{padding-inline:var(--gut)}
 main.wrap{padding-block:clamp(44px,7vw,88px) 24px}
-.col{max-width:680px}
+.col{max-width:1440px}   /* wide screens: headings move into a left rail (see the 1200px query below) */
 section{padding-block:40px;border-top:1px solid var(--rule);scroll-margin-top:12px}
 section:first-child{border-top:0;padding-top:0}
 h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.01em;text-transform:uppercase;color:var(--ink)}
 .wrap p{margin:0 0 1em}
-.lede{font-size:clamp(18px,1.6vw,20px);line-height:1.6;color:var(--ink)}
+.lede{max-width:46ch;font-size:clamp(18px,1.6vw,20px);line-height:1.6;color:var(--ink)}
 .list,.links,.slots{list-style:none;margin:0;padding:0}
 .list li{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;padding:16px 0;border-bottom:1px solid var(--rule);font:500 clamp(19px,1.9vw,22px)/1.35 var(--fb)}
 .list li:first-child{border-top:1px solid var(--rule)}
@@ -102,7 +102,7 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 .links a{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:52px;padding:6px 0;font:500 18px/1.3 var(--fb);text-decoration:none}
 .links a::after{content:"\2197";font:500 16px var(--fm);color:var(--acc)}
 .links a:hover{color:var(--hov)}
-.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;container-type:inline-size}
 .slot{display:flex;flex-direction:column;justify-content:space-between;gap:24px;min-height:120px;padding:14px 16px 16px;border:1px dashed var(--slot-line);border-radius:2px;background:linear-gradient(180deg,rgba(var(--slot-bg),.42),rgba(var(--slot-bg),0))}
 .slot .sl{font:500 11px/1.4 var(--fm);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
 .slot h3{margin:0;font:700 clamp(24px,2.4vw,28px)/1.05 var(--fd);letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
@@ -185,6 +185,14 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 .oc-t{display:flex;flex-direction:column;justify-content:space-between;gap:24px;min-width:0;padding:14px 0 16px 16px}
 .oc-pic{display:block;width:100%;height:100%;object-fit:cover;object-position:40% 50%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 30%);mask-image:linear-gradient(90deg,transparent,#000 30%)}
 @media (max-width:560px){.slots{grid-template-columns:1fr}}
+/* a wide Lab: Sweet Spots goes back to its banner's layout, words on the left and the map on the right */
+@container (min-width:860px){.slot.ss{grid-template-columns:minmax(0,1fr) minmax(0,2fr);grid-template-areas:"mark map" "sd map";grid-template-rows:auto 1fr;gap:18px 28px}.ss-sheet{margin-top:0}}
+/* wide screens: each section's heading sits in a left rail, its content on the right */
+@media (min-width:1200px){
+section{display:grid;grid-template-columns:minmax(260px,3fr) minmax(0,9fr);column-gap:clamp(40px,4vw,72px);align-items:start;padding-block:56px}
+section>h2{grid-column:1;grid-row:1/span 9;margin:0}
+section>:not(h2){grid-column:2}
+}
 .foot{padding-block:28px 48px;border-top:1px solid var(--rule);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:16px 32px;font:400 12px/1.6 var(--fm);color:var(--mut)}
 .foot .ride{display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:66ch}
 .foot p{margin:0}
