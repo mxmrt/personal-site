@@ -2,7 +2,7 @@
 """Build maxmartinelli.com from src/ into public/, the folder Cloudflare serves.
 
 The page is one self-contained index.html: the shell (layout, content, CSS), the four ride engines and the shared
-runtime, all inline. static/ holds the files copied next to it (404 page, icons, social image, _headers).
+runtime, all inline. <!--include:path--> in the shell pulls in a file from src/ (the Lab's generated SVGs). static/ holds the files copied next to it (404 page, icons, social image, _headers).
 The build is deterministic, so `--check` can prove public/ matches src/.
 
 usage:
@@ -36,9 +36,18 @@ def read(*parts):
         return f.read()
 
 
+def include(m):
+    """<!--include:lab/x.svg--> in the shell is replaced by src/lab/x.svg (for long generated markup)."""
+    rel = m.group(1)
+    if '..' in rel.split('/') or not os.path.isfile(os.path.join(HERE, 'src', rel)):
+        sys.exit('src/shell.html includes a missing file: src/' + rel)
+    return read('src', *rel.split('/')).strip()
+
+
 def fragment(ids):
     """shell + engines + runtime as one fragment (the claude.ai artifact form of the page)."""
     shell, runtime = read('src', 'shell.html'), read('src', 'runtime.js')
+    shell = re.sub(r'<!--include:([\w./-]+)-->', include, shell)
     for token in ('__RIDES__', '<!--ENGINES-->', '<!--RUNTIME-->'):
         if shell.count(token) != 1:
             sys.exit('src/shell.html must contain %s exactly once' % token)
