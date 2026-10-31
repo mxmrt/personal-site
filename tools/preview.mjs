@@ -9,7 +9,8 @@
 // Writes <out>/<ride>/:
 //   desktop-rest.png, phone-rest.png         what a visitor sees a few seconds after load
 //   desktop-frames.png, phone-frames.png     contact sheet of hero frames via window.seek(t), same t as docs/reference/
-//   desktop-page.png, phone-page.png         the whole page, stitched (not with --quick)
+//   desktop-page.png, phone-page.png         the whole page, stitched (not with --quick), with the Lab map's dots
+//                                            landed and its tour paused, so the shots repeat
 //   desktop-reduced.png, phone-reduced.png   prefers-reduced-motion still
 //   report.json                              problems (must fix), warnings, measurements
 // and <out>/summary.json. Exit 1 if any ride has problems.
@@ -132,6 +133,12 @@ for (const id of IDS) {
     report.info[vp.name].framesPerSecondOffScreen = off;
     if (off > 8) problem(`[${vp.name}] animation keeps running with the hero off-screen (${off} frames/s)`);
     if (!opts.quick) {
+      // the Lab's Sweet Spots map: let its dots land and pause its tour, so the page shots come out the same every run
+      await page.evaluate(() => { const b = document.getElementById('ssBox'); if (b) b.scrollIntoView({ block: 'center', behavior: 'instant' }); });
+      const landed = await page.waitForFunction(() => { const b = document.getElementById('ssBox'); return !b || ['play', 'tour'].includes(b.dataset.state); }, null, { timeout: 60000 }).then(() => true, () => false);
+      if (!landed) warn(`[${vp.name}] the Lab map's fly-in did not finish`);
+      await page.evaluate(() => { const t = document.getElementById('ssTour'); if (t && !t.hidden && t.dataset.on === '1') t.click(); });
+      await sleep(900);
       const shots = [], vh = vp.viewport.height, n = Math.min(10, Math.ceil(f.h / vh));
       for (let i = 0; i < n; i++) {
         const y = await page.evaluate((y) => { window.scrollTo({ top: y, behavior: 'instant' }); return window.scrollY; }, i * vh);

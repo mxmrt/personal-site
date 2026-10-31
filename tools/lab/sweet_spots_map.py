@@ -1,6 +1,7 @@
-"""Static SVG thumbnail of Claude's Sweet Spots map: the 404 real candies (dots in their family inks), the 11 spots
-that stayed empty (dashed rings) and the 30 new candies (diamonds; tier A filled). Mirrors the Sweet Spots page's
-hero map: same fitter (best rotation, uniform scale, y up), colors, ring and diamond styles.
+"""Static SVG of Claude's Sweet Spots map: the 404 real candies (dots in their family inks), the 11 spots that stayed
+empty (dashed rings) and the 30 new candies (diamonds; tier A filled). It is the Lab card's fallback for visitors
+without JavaScript: src/lab/sweet-spots-map.js removes it and draws the live map in its place. Mirrors the live map
+at its desktop size: same fitter (best rotation, uniform scale, y up), colours, dot, ring and diamond sizes.
 
 Regenerates src/lab/sweet-spots-map.svg from the Sweet Spots page, which embeds its data as
 <script type="application/json" id="candy-data"> (dev only; then run python3 build.py):
@@ -9,8 +10,8 @@ Regenerates src/lab/sweet-spots-map.svg from the Sweet Spots page, which embeds 
 import json, math, re, sys
 src, out = sys.argv[1], sys.argv[2]
 W, H, PAD = 360, 240, dict(l=10, r=10, t=12, b=10)
-SCALE = 360 / 320                         # the thumbnail shows at about 320 CSS px wide
-R = 2.6 * SCALE; Z = R * 1.8; RING_MIN = 7 * SCALE
+SCALE = 360 / 600                         # the map box is about 600 CSS px wide on desktop
+R = 600 / 150 * SCALE; Z = R * 1.8; RING_MIN = 7 * SCALE   # the live map: R = W / 150, diamonds 1.8 R, rings at least 7 px
 C = {0: '#b9aa9e', 1: '#2a78d6', 2: '#eb6834', 3: '#1baf7a', 4: '#eda100', 5: '#e87ba4', 6: '#008300', 7: '#6250d6', 8: '#e34948'}
 FAMC = {1: 8, 2: 3, 3: 2, 4: 1, 5: 5, 6: 7, 7: 6, 8: 4}   # family -> palette slot (Sweet Spots, Claude run)
 INK, SHEET, SUGAR = '#1b1317', '#ffffff', '#ffe6ef'
@@ -38,13 +39,13 @@ for h in run['holes']:
 holes = f'<g fill="{SUGAR}" fill-opacity=".85" stroke="{INK}" stroke-opacity=".9" stroke-width="{f1(1.5 * SCALE)}" stroke-dasharray="{f1(3.5 * SCALE)} {f1(3 * SCALE)}">' + ''.join(parts) + '</g>'
 # real candies: one white underlay, then one path per family ink (zero-length round-capped segments draw dots)
 dot = lambda p: f'M{f1(X(p["x"], p["y"]))} {f1(Y(p["x"], p["y"]))}h0'
-under = f'<path d="{"".join(dot(p) for p in run["real"])}" stroke="{SHEET}" stroke-width="{f1(2 * R + 1.8)}"/>'
+under = f'<path d="{"".join(dot(p) for p in run["real"])}" stroke="{SHEET}" stroke-width="{f1(2 * R + 1.8 * SCALE)}"/>'
 fams = ''.join(f'<path d="{"".join(dot(p) for p in run["real"] if p["f"] == f)}" stroke="{C[FAMC[f]]}" stroke-width="{f1(2 * R)}"/>' for f in sorted(FAMC))
 dots = f'<g fill="none" stroke-linecap="round">{under}{fams}</g>'
 # new candies
 dia = lambda p: f'M{f1(X(p["x"], p["y"]))} {f1(Y(p["x"], p["y"]) - Z)}l{f1(Z)} {f1(Z)} {f1(-Z)} {f1(Z)} {f1(-Z)} {f1(-Z)}z'
 tierA = ''.join(dia(p) for p in run['new'] if p.get('tier') == 'A'); other = ''.join(dia(p) for p in run['new'] if p.get('tier') != 'A')
-gems = (f'<path d="{tierA}" fill="{INK}" stroke="{SHEET}" stroke-width="1.3"/>' if tierA else '') + (f'<path d="{other}" fill="{SHEET}" stroke="{INK}" stroke-width="1.6"/>' if other else '')
+gems = (f'<path d="{tierA}" fill="{INK}" stroke="{SHEET}" stroke-width="{f1(1.3 * SCALE)}"/>' if tierA else '') + (f'<path d="{other}" fill="{SHEET}" stroke="{INK}" stroke-width="{f1(1.6 * SCALE)}"/>' if other else '')
 svg = f'<svg class="ss-map" viewBox="0 0 {W} {H}" aria-hidden="true" focusable="false">{holes}{dots}{gems}</svg>'
 open(out, 'w').write(svg)
 print(f'{len(run["real"])} dots, {len(run["holes"])} rings, {len(run["new"])} diamonds ({sum(1 for p in run["new"] if p.get("tier") == "A")} tier A), rotation {math.degrees(math.atan2(sn, c)):.0f} deg, {len(svg)} bytes', file=sys.stderr)

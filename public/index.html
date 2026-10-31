@@ -111,16 +111,59 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 .slot .sa::after{content:"\2197";font:500 14px var(--fm);color:var(--acc);text-decoration:none}
 .slot .sa:hover{color:var(--hov)}
 /* Sweet Spots wears its own project's wrapper: strawberry with grain, print crop marks, the ring-and-diamond wordmark
-   (Archivo, drawn as outlines) and a thumbnail of the real candy map. Fixed colours on purpose: it looks the same on every ride. */
-.slot.ss{grid-column:1/-1;position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);grid-template-areas:"sl map" "mark map" "sd map";grid-template-rows:auto auto 1fr;align-items:start;gap:14px 26px;padding:28px 24px 24px;border:0;border-radius:0;color:#1b1317;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .03  0 0 0 0 .07  0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E") repeat,#ff5a8f}
+   (Archivo, drawn as outlines) and the project's live map with its tour of the new candies (src/lab/sweet-spots-map.js).
+   Fixed colours on purpose: it looks the same on every ride. */
+.slot.ss{grid-column:1/-1;position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"sl sl" "mark sd" "map map";align-items:start;gap:14px 24px;padding:28px 24px 24px;border:0;border-radius:0;color:#1b1317;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .03  0 0 0 0 .07  0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E") repeat,#ff5a8f}
 .ss .sl{grid-area:sl;color:#1b1317}
 .ss h3{grid-area:mark;line-height:0}
 .ss-mark{display:block;width:100%;max-width:300px;height:auto;overflow:visible}
 .ss .sd{grid-area:sd;margin:0;font-size:15.5px;color:#1b1317}
-.ss-sheet{grid-area:map;align-self:stretch;display:grid;align-content:center;gap:8px;padding:10px 12px;background:#fff}
-.ss-cap{margin:0;font:600 12.5px/1.3 var(--fb);color:#1b1317}
-.ss-map{display:block;width:100%;height:auto}
-.ss-key{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0;padding-top:7px;border-top:1px solid rgba(27,19,23,.12);font:500 12px/1.3 var(--fb);color:#54464c}
+.ss-sheet{grid-area:map;display:grid;gap:8px;min-width:0;margin-top:8px;padding:12px 14px 10px;background:#fff;color:#1b1317}
+.ss-sheet :focus-visible{outline-color:#1b1317}
+.ss-head{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"cap btn" "hint hint";align-items:center;gap:2px 12px}
+.ss-cap{grid-area:cap;margin:0;font:600 13px/1.3 var(--fb);color:#1b1317}
+.ss-hint{grid-area:hint;margin:0;min-height:1.35em;font:400 12.5px/1.35 var(--fb);color:#54464c}
+.ss-tb{grid-area:btn;display:inline-flex;align-items:center;gap:8px;min-height:44px;margin:-12px -8px -12px 0;padding:0 8px;border:0;background:none;color:#1b1317;font:500 11px/1 var(--fm);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.ss-tb::before{content:"";box-sizing:border-box;width:9px;height:10px;border-inline:3px solid currentColor}
+.ss-tb[data-on="0"]::before{width:0;border-width:5px 0 5px 9px;border-style:solid;border-color:transparent currentColor}
+.ss-tb:hover{text-decoration:underline;text-underline-offset:4px}
+.ss-tb[hidden],.ss .tour[hidden],.ss-hint:empty,.ss-legend:empty{display:none}
+.ss-box{position:relative;aspect-ratio:1.5}
+.ss-box .ss-map,#ssCanvas{position:absolute;inset:0;width:100%;height:100%}
+#ssCanvas{touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+.ss-tip{position:absolute;left:0;top:0;z-index:5;max-width:250px;padding:9px 11px;border:1.5px solid #1b1317;background:#fff;color:#1b1317;font:400 13px/1.35 var(--fb);opacity:0;transition:opacity .12s;pointer-events:none}
+.ss-tip b{display:block;font-weight:600}
+.ss-tip span{display:block;color:#54464c}
+.ss-tip.rich{display:grid;grid-template-columns:68px minmax(0,1fr);gap:10px;max-width:300px;align-items:start}
+.ss-tip .ti{width:68px;height:68px;overflow:hidden;background:#f3ede6}
+.ss-tip .ti img{display:block;width:100%;height:100%;object-fit:cover}
+.ss-tip .fl{display:flex;align-items:center;gap:6px}
+.ss-tip .fl i{flex:none;width:9px;height:9px;border-radius:50%}
+.ss .tour{position:absolute;z-index:4;width:var(--cw,240px);display:grid;background:#fff;color:#1b1317;box-shadow:0 0 0 1.5px #1b1317,6px 6px 0 #ff4f86;opacity:0;transform:translateY(8px) scale(.97);transition:opacity .35s ease,transform .45s cubic-bezier(.2,.9,.25,1.2);pointer-events:none}
+.ss .tour.on{opacity:1;transform:none}
+.ss .tour-img{display:block;aspect-ratio:1;overflow:hidden;background:#f3ede6}
+.ss .tour-img img{display:block;width:100%;height:100%;object-fit:cover}
+.ss .tour-txt{display:grid;gap:3px;padding:10px 12px 11px}
+.ss .tour-k{font:500 10.5px/1.3 var(--fm);letter-spacing:.08em;text-transform:uppercase;color:#c8174f}
+.ss .tour-txt b{font:600 16px/1.15 var(--fb)}
+.ss .tour-p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:400 12.5px/1.35 var(--fb);color:#54464c}
+.ss .tour-m{font:500 12px/1.3 var(--fb)}
+.ss .tour-bar{display:block;height:3px;background:rgba(27,19,23,.12)}
+.ss .tour-bar i{display:block;width:0;height:100%;background:#ff4f86}
+.ss .tour.on .tour-bar i{animation:ss-bar var(--dwell,3.8s) linear forwards}
+@keyframes ss-bar{to{width:100%}}
+.ss-box.narrow .tour{box-shadow:0 0 0 1.5px #1b1317,4px 4px 0 #ff4f86}
+.ss-box.narrow .tour-p{display:none}
+.ss-box.narrow .tour-txt{gap:2px;padding:7px 9px 9px}
+.ss-box.narrow .tour-txt b{font-size:14px}
+.ss-box.narrow .tour-k{font:600 9.5px/1.25 var(--fb);letter-spacing:.03em}
+.ss-box.narrow .tour-m{font-size:11px}
+.ss-legend{display:flex;flex-wrap:wrap;gap:0 14px;padding-top:2px;border-top:1px solid rgba(27,19,23,.12)}
+.ss .fam{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0;text-align:left;white-space:nowrap;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:#1b1317;font:500 12.5px/1.2 var(--fb);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.ss .fam i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--sw)}
+.ss .fam b{font-weight:400;color:#54464c;font-variant-numeric:tabular-nums}
+.ss .fam[aria-pressed="true"]{border-bottom-color:#1b1317}
+.ss-key{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0;font:500 12px/1.3 var(--fb);color:#54464c}
 .ss-key span{display:inline-flex;align-items:center;gap:6px}
 .ss-key i{flex:none;width:9px;height:9px;border-radius:50%;background:#1b1317}
 .ss-key .kr{box-sizing:border-box;width:11px;height:11px;background:none;border:1.5px dashed #1b1317}
@@ -128,7 +171,9 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 .ss .crop{position:absolute;width:16px;height:16px;border:0 solid #1b1317;opacity:.6;pointer-events:none}
 .ss .c1{top:7px;left:7px;border-top-width:1.5px;border-left-width:1.5px}.ss .c2{top:7px;right:7px;border-top-width:1.5px;border-right-width:1.5px}
 .ss .c3{bottom:7px;left:7px;border-bottom-width:1.5px;border-left-width:1.5px}.ss .c4{bottom:7px;right:7px;border-bottom-width:1.5px;border-right-width:1.5px}
-@media (max-width:640px){.slot.ss{grid-template-columns:1fr;grid-template-areas:"sl" "mark" "map" "sd";grid-template-rows:auto;padding:24px 18px 20px}}
+@media (max-width:560px){.slot.ss{grid-template-columns:1fr;grid-template-areas:"sl" "mark" "sd" "map";padding:24px 18px 20px}.ss-box{aspect-ratio:1.02}.ss-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}.ss .fam{white-space:normal}.ss .fam b{display:none}}
+@media (pointer:coarse){.ss .fam{min-height:44px}}
+@media (prefers-reduced-motion:reduce){.ss .tour{transition:none}}
 /* Offbook Chess shows its first piece, the Archer: the photo fills the card's right side and fades into the card */
 .slot.oc{display:grid;grid-template-columns:minmax(0,1fr) clamp(120px,36%,200px);gap:0;min-height:200px;padding:0;overflow:hidden}
 .oc-t{display:flex;flex-direction:column;justify-content:space-between;gap:24px;min-width:0;padding:14px 0 16px 16px}
@@ -212,7 +257,12 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 <span class="sl">In progress</span>
 <h3><svg class="ss-mark" viewBox="36 -710 4521 1552" role="img" aria-label="Sweet Spots"><defs><g id="ss-word"><path d="M461 12Q374 12 299 2Q224 -9 167 -34Q110 -59 78 -104Q46 -150 46 -219Q46 -221 46 -224Q46 -228 47 -231H271Q270 -227 270 -223Q270 -219 270 -216Q270 -186 291 -169Q313 -152 351 -146Q390 -140 440 -140Q461 -140 483 -141Q506 -142 526 -145Q547 -148 564 -153Q580 -159 591 -168Q601 -178 601 -192Q601 -211 578 -222Q555 -233 516 -240Q478 -246 430 -251Q382 -257 330 -265Q279 -273 231 -287Q183 -302 144 -326Q105 -351 83 -390Q60 -428 60 -484Q60 -541 90 -583Q120 -624 172 -650Q225 -675 294 -688Q363 -700 441 -700Q520 -700 588 -688Q655 -676 706 -651Q757 -626 785 -586Q813 -546 813 -490V-478H591V-483Q591 -504 576 -519Q561 -535 530 -545Q498 -554 450 -554Q398 -554 364 -548Q329 -541 313 -530Q296 -518 296 -505Q296 -486 319 -476Q342 -465 380 -459Q419 -453 467 -447Q515 -442 567 -434Q618 -426 666 -413Q714 -399 753 -375Q792 -351 814 -315Q837 -278 837 -224Q837 -140 788 -88Q739 -36 654 -12Q569 12 461 12ZM1055 0 847 -688H1083L1176 -358Q1182 -336 1187 -314Q1192 -292 1196 -274Q1200 -255 1202 -243H1209Q1211 -255 1214 -269Q1217 -284 1220 -300Q1223 -316 1227 -331Q1231 -346 1234 -358L1321 -688H1605L1692 -358Q1696 -341 1701 -320Q1705 -300 1709 -279Q1714 -258 1716 -243H1723Q1725 -255 1729 -270Q1732 -285 1736 -300Q1740 -316 1743 -331Q1747 -346 1750 -358L1843 -688H2058L1850 0H1584L1478 -399Q1474 -415 1469 -432Q1465 -450 1462 -464Q1459 -479 1457 -488H1450Q1447 -476 1443 -459Q1439 -442 1435 -426Q1431 -411 1428 -399L1322 0ZM2107 0V-688H2835V-525H2338V-425H2769V-270H2338V-163H2843V0ZM2933 0V-688H3661V-525H3164V-425H3595V-270H3164V-163H3669V0ZM3999 0V-509H3705V-688H4523V-509H4229V0ZM461 812Q374 812 299 802Q224 791 167 766Q110 741 78 696Q46 650 46 581Q46 579 46 576Q46 572 47 569H271Q270 573 270 577Q270 581 270 584Q270 614 291 631Q313 648 351 654Q390 660 440 660Q461 660 483 659Q506 658 526 655Q547 652 564 647Q580 641 591 632Q601 622 601 608Q601 589 578 578Q555 567 516 560Q478 554 430 549Q382 543 330 535Q279 527 231 513Q183 498 144 474Q105 449 83 410Q60 372 60 316Q60 259 90 217Q120 176 172 150Q225 125 294 112Q363 100 441 100Q520 100 588 112Q655 124 706 149Q757 174 785 214Q813 254 813 310V322H591V317Q591 296 576 281Q561 265 530 255Q498 246 450 246Q398 246 364 252Q329 259 313 270Q296 282 296 295Q296 314 319 324Q342 335 380 341Q419 347 467 353Q515 358 567 366Q618 374 666 387Q714 401 753 425Q792 449 814 485Q837 522 837 576Q837 660 788 712Q739 764 654 788Q569 812 461 812ZM919 800V112H1463Q1531 112 1583 142Q1634 173 1663 226Q1692 280 1692 350Q1692 422 1662 476Q1633 531 1581 560Q1530 590 1463 590H1149V800ZM1149 427H1398Q1440 427 1460 408Q1480 388 1480 351Q1480 326 1471 309Q1462 293 1443 284Q1425 275 1398 275H1149ZM2857 800V291H2563V112H3381V291H3087V800ZM3830 812Q3743 812 3668 802Q3593 791 3536 766Q3479 741 3447 696Q3415 650 3415 581Q3415 579 3415 576Q3415 572 3416 569H3640Q3639 573 3639 577Q3639 581 3639 584Q3639 614 3660 631Q3682 648 3720 654Q3759 660 3809 660Q3830 660 3852 659Q3875 658 3895 655Q3916 652 3933 647Q3949 641 3960 632Q3970 622 3970 608Q3970 589 3947 578Q3924 567 3885 560Q3847 554 3799 549Q3751 543 3699 535Q3648 527 3600 513Q3552 498 3513 474Q3474 449 3452 410Q3429 372 3429 316Q3429 259 3459 217Q3489 176 3541 150Q3594 125 3663 112Q3732 100 3810 100Q3889 100 3957 112Q4024 124 4075 149Q4126 174 4154 214Q4182 254 4182 310V322H3960V317Q3960 296 3945 281Q3930 265 3899 255Q3867 246 3819 246Q3767 246 3733 252Q3698 259 3682 270Q3665 282 3665 295Q3665 314 3688 324Q3711 335 3749 341Q3788 347 3836 353Q3884 358 3936 366Q3987 374 4035 387Q4083 401 4122 425Q4161 449 4183 485Q4206 522 4206 576Q4206 660 4157 712Q4108 764 4023 788Q3938 812 3830 812Z"/><g transform="translate(1681 70) scale(7.3000)"><ellipse cx="58" cy="50" rx="49" ry="42" fill="none" stroke="currentColor" stroke-width="15" stroke-dasharray="15.5 11"/><path d="M58 27L81 50 58 73 35 50Z"/></g></g></defs><use href="#ss-word" fill="#c4155a" color="#c4155a" transform="translate(24 20)"/><use href="#ss-word" fill="#1b1317" color="#1b1317"/></svg></h3>
 <p class="sd">We mapped 404 real candies, had Claude and OpenAI’s Codex find the empty space between them, and designed new candies to fill it. Candy is the rehearsal for insurance filings.</p>
-<div class="ss-sheet" aria-hidden="true"><p class="ss-cap">Claude’s map of the 404 real candies</p><svg class="ss-map" viewBox="0 0 360 240" aria-hidden="true" focusable="false"><g fill="#ffe6ef" fill-opacity=".85" stroke="#1b1317" stroke-opacity=".9" stroke-width="1.7" stroke-dasharray="3.9 3.4"><circle cx="142.5" cy="26.8" r="10.4"/><circle cx="288.1" cy="210.3" r="9.4"/><circle cx="62.7" cy="54.4" r="9.3"/><circle cx="44.9" cy="33.4" r="8.7"/><circle cx="251.5" cy="118.1" r="8.2"/><circle cx="120" cy="34.2" r="7.9"/><circle cx="35.6" cy="63.7" r="7.9"/><circle cx="234.8" cy="107.9" r="7.9"/><circle cx="336.2" cy="195.9" r="7.9"/><circle cx="111.3" cy="102.4" r="7.9"/><circle cx="114.4" cy="48.8" r="7.9"/></g><g fill="none" stroke-linecap="round"><path d="M135.6 55.5h0M288 224.4h0M65.9 17.9h0M104.9 53.2h0M270.5 203.6h0M131.2 12.8h0M238.9 114.3h0M295.2 204.2h0M272.8 98.3h0M119.6 47.8h0M243.4 124h0M66.7 79.5h0M111.4 31.9h0M143.1 39.1h0M38.1 27h0M273.2 111.8h0M129.8 34.5h0M323.3 226.3h0M285 153.1h0M19.1 60.4h0M90 87.9h0M304.8 158.7h0M270.4 111h0M129.6 87.6h0M275.1 210.1h0M241.7 104.9h0M22.5 75.8h0M226.9 114.1h0M245.8 112.3h0M121.4 75.8h0M37.5 24.2h0M94.9 91.4h0M341.9 190.4h0M23.5 88h0M62.9 24.8h0M19.5 93.4h0M34.6 43h0M136.9 12h0M322.6 226.2h0M301.3 156.9h0M62.9 15.8h0M278.8 223.9h0M25.8 89.9h0M316.3 212.9h0M286.7 136.3h0M76.1 53.9h0M325.4 194.7h0M120.8 46.1h0M261.4 133.7h0M94.4 34.8h0M235 101.9h0M158.1 36.8h0M57.3 18.4h0M127.7 106.5h0M118.2 57.8h0M89.8 31h0M43.7 42h0M287.8 115.9h0M313.4 215.6h0M73.2 37.5h0M275.2 207.8h0M286.5 151.9h0M80 42.5h0M270.5 99.3h0M16.8 94.1h0M285.9 225.8h0M56.7 23.8h0M114.8 61h0M93.3 50.8h0M317.2 228.8h0M289.1 152.7h0M345.2 197.6h0M44.3 82.8h0M65.5 15.3h0M127.7 85.6h0M25.3 89.9h0M154.1 39.8h0M64.9 12.6h0M135.5 13h0M17 90.8h0M260.6 93.5h0M328 187.7h0M109.8 95.2h0M118 23.1h0M50.7 90.2h0M105.2 98.3h0M132.5 78.4h0M118.7 88.8h0M72.9 93.5h0M29.4 82.4h0M141.6 12.7h0M285.8 152.1h0M131 13.6h0M307.8 162.7h0M35.8 92.6h0M29.2 87.8h0M48.1 93.6h0M27.7 44.7h0M18.2 93.9h0M258.7 89.6h0M106.9 95.4h0M104.2 29.3h0M334 201.2h0M322.4 222.3h0M280.7 222.1h0M287.8 223.5h0M267.4 93.4h0M107 105.7h0M53.2 87.8h0M331.5 200.8h0M276.4 112.4h0M255.6 111.1h0M40.4 67.5h0M280.4 150.6h0M31.8 77.2h0M83.5 35.2h0M47 49.5h0M68.9 79.7h0M236.7 113.6h0M127.2 47.2h0M66 31.4h0M25.6 20.5h0M160.2 32.3h0M272.2 95.8h0M269.6 200.9h0M278.7 111.9h0M116.7 102.5h0M134.3 81.1h0M274.9 121.7h0M41.2 60.1h0M291.6 123.8h0M139.7 37.3h0M270.7 95.6h0M70.4 18.7h0M344.9 198.6h0M118.4 95.6h0M26.7 46.3h0M255 125.5h0M144.9 40.2h0M276.1 209.7h0M48.9 92.9h0M62.1 72.6h0M153.2 26h0M107.1 30.5h0M338.7 187.8h0M127.1 79.9h0M85.1 22.4h0M73.9 53.7h0M132.3 18.7h0M160.9 34h0M122.1 98.6h0M39.6 87.3h0M266 134.4h0M21.4 60h0M122.4 23.4h0M280.3 222.5h0M141 14.4h0M30.7 42.6h0M257.8 129.1h0M21.2 62.5h0M77.9 39.2h0M135.3 14.1h0M253.4 95.7h0M91.2 29.6h0M304.1 216.3h0M54.1 78.2h0M61.4 75.6h0M76.3 82.4h0M305.1 216.5h0M44.5 85.1h0M271.9 206.9h0M20.9 61.7h0M264.5 130.5h0M120.3 89h0M325.2 227.1h0M315.9 222.5h0M145.5 36.7h0M332.8 187.8h0M327.9 225.3h0M303.7 217.7h0M287.9 200.9h0M271.3 152.6h0M117.5 109.3h0M85.9 89.9h0M345.4 197h0M26.6 22.8h0M29.3 89.8h0M324.1 227.8h0M31.1 91.3h0M302.9 209h0M326.3 192.5h0M127 37.3h0M231.7 102.4h0M108.5 96.1h0M251.1 135.8h0M340.1 191.7h0M25.3 99.4h0M304.3 214.3h0M70.2 13.5h0M21.9 75.5h0M120.6 96.6h0M260.7 90.9h0M246.2 127h0M158.1 34.2h0M263.5 140.1h0M277.5 226.8h0M331.7 192.4h0M291.1 120.8h0M29.9 25.9h0M263.9 129.6h0M291.2 122.3h0M268.9 201.1h0M278.3 224h0M104.6 91.5h0M114.8 110.8h0M284.3 151.7h0M115.8 27.8h0M335.8 184.2h0M54.3 38.8h0M114.1 111.8h0M341 190h0M114.2 92.8h0M287.4 151.2h0M289.8 221.6h0M72.1 31h0M259.6 88h0M275.1 114.5h0M272.3 96.9h0M132.4 13.4h0M127 100.7h0M333 189.3h0M281.5 217h0M121.7 43.3h0M71.9 52.4h0M279.3 223.4h0M286.4 151.1h0M121.1 22.2h0M72.8 52h0M66 31h0M241.8 104.8h0M109.3 47.4h0M134.1 34.4h0M271 96.6h0M53.1 30.3h0M28.3 77.8h0M312.5 224.9h0M256.7 100.8h0M45.2 69.1h0M266 109.8h0M40.7 92.7h0M292.2 122.8h0M43.6 62.3h0M335 185.3h0M143.7 13.7h0M297.9 199.4h0M19.4 91.2h0M311.2 229.4h0M107.3 106.8h0M135.2 76.2h0M66.4 62.9h0M108.1 52.7h0M228.8 105.7h0M83.3 91.4h0M115.1 39.9h0M123.9 40.8h0M115.2 112.8h0M294.3 228.1h0M304.3 211.6h0M18.7 93.9h0M114.6 54.1h0M81.7 35.7h0M268.8 195.6h0M290.2 121.2h0M123.3 105.7h0M134.6 33.7h0M38.7 41.1h0M37.2 29.2h0M26.7 22.3h0M302.6 198.8h0M262.3 94.6h0M96.7 29.9h0M128.7 61.9h0M255.2 133.5h0M232.6 113.5h0M325.9 193.5h0M269.4 103.3h0M256.4 99.7h0M40.9 60.7h0M114 56h0M299.3 216.5h0M114 87.1h0M68.6 31.3h0M147.5 17.6h0M70.9 65.1h0M32 68.6h0M65.6 63.8h0M344.9 190.2h0M62 35.1h0M54 92h0M115.1 41.4h0M59.7 16.5h0M16.9 92.2h0M20.8 62.3h0M79 31.3h0M260.8 124.1h0M305.9 212.2h0M26.6 25h0M291.1 154.3h0M319.6 226.7h0M34.1 88h0M151.2 19.8h0M12.6 92.8h0M107.7 38.4h0M262.2 130.1h0M85.1 33.8h0M318.3 222.9h0M39.7 87.7h0M65.8 77.4h0M347.4 195.8h0M344.5 200.9h0M48.7 72.9h0M303.1 212.2h0M260.6 126.3h0M278.1 226.5h0M304 158.6h0M268.2 101.3h0M48.6 78.8h0M263.6 107.1h0M36.4 26.6h0M21 55.8h0M258 123.4h0M73.5 12.7h0M31.3 53.1h0M235.3 119.3h0M116.3 97.6h0M33.6 93.4h0M27.2 22.4h0M116.1 113.1h0M150.6 43.8h0M302.8 158.1h0M334.3 216.9h0M69.2 42.1h0M130.8 72.4h0M255.7 135.7h0M89.7 89.7h0M132.9 41.7h0M158.3 34.3h0M108.7 93.5h0M84.7 87.4h0M128.4 26.1h0M67.5 34.1h0M114.4 97.9h0M138.1 76.8h0M135.5 45.9h0M134.1 19h0M268 105.7h0M118.2 89.9h0M262 108.2h0M160.7 30h0M137.8 36.7h0M28.5 91h0M123.3 101.9h0M331.9 221.4h0M217.8 113.3h0M66.9 16.3h0M61 20.9h0M295.2 217.4h0M116.7 114.9h0M300.3 201.5h0M338.3 186h0M247.4 136.3h0M134.6 14.4h0M36.1 25.9h0M88 56h0M275.1 99.6h0M286.9 150.5h0M276.8 219.2h0M45.1 93.4h0M265.2 97.8h0M87.6 34h0M296 224.7h0M62 14.5h0M131.3 31h0M250 101.1h0M25.7 22.3h0M236.3 121.5h0M61.9 30.2h0M346.9 194.3h0M38.8 26.3h0M78.7 84.6h0M144.6 43.3h0M54.4 69h0M61.8 72.3h0M341.2 203.2h0M266.8 95.5h0M66.4 36.6h0M257 125.3h0M82.1 91.5h0M28.5 23.8h0M56.1 47.9h0M250.8 138.5h0M287.5 128.3h0M335.4 183.4h0M130.9 15.6h0" stroke="#ffffff" stroke-width="7.7"/><path d="M238.9 114.3h0M272.8 98.3h0M243.4 124h0M66.7 79.5h0M273.2 111.8h0M285 153.1h0M270.4 111h0M241.7 104.9h0M226.9 114.1h0M245.8 112.3h0M286.7 136.3h0M261.4 133.7h0M235 101.9h0M287.8 115.9h0M286.5 151.9h0M270.5 99.3h0M289.1 152.7h0M260.6 93.5h0M285.8 152.1h0M258.7 89.6h0M267.4 93.4h0M276.4 112.4h0M255.6 111.1h0M280.4 150.6h0M272.2 95.8h0M278.7 111.9h0M274.9 121.7h0M291.6 123.8h0M270.7 95.6h0M255 125.5h0M266 134.4h0M257.8 129.1h0M253.4 95.7h0M264.5 130.5h0M231.7 102.4h0M251.1 135.8h0M260.7 90.9h0M263.5 140.1h0M291.1 120.8h0M263.9 129.6h0M291.2 122.3h0M284.3 151.7h0M287.4 151.2h0M259.6 88h0M275.1 114.5h0M272.3 96.9h0M286.4 151.1h0M241.8 104.8h0M271 96.6h0M256.7 100.8h0M266 109.8h0M292.2 122.8h0M228.8 105.7h0M115.1 39.9h0M290.2 121.2h0M262.3 94.6h0M255.2 133.5h0M232.6 113.5h0M269.4 103.3h0M256.4 99.7h0M62 35.1h0M115.1 41.4h0M260.8 124.1h0M291.1 154.3h0M151.2 19.8h0M262.2 130.1h0M65.8 77.4h0M260.6 126.3h0M268.2 101.3h0M263.6 107.1h0M258 123.4h0M235.3 119.3h0M255.7 135.7h0M268 105.7h0M262 108.2h0M217.8 113.3h0M247.4 136.3h0M88 56h0M286.9 150.5h0M265.2 97.8h0M250 101.1h0M236.3 121.5h0M266.8 95.5h0M257 125.3h0M250.8 138.5h0M287.5 128.3h0" stroke="#e34948" stroke-width="5.9"/><path d="M304.8 158.7h0M341.9 190.4h0M301.3 156.9h0M325.4 194.7h0M345.2 197.6h0M328 187.7h0M307.8 162.7h0M334 201.2h0M344.9 198.6h0M338.7 187.8h0M332.8 187.8h0M345.4 197h0M326.3 192.5h0M340.1 191.7h0M331.7 192.4h0M335.8 184.2h0M341 190h0M333 189.3h0M335 185.3h0M297.9 199.4h0M302.6 198.8h0M344.9 190.2h0M347.4 195.8h0M344.5 200.9h0M304 158.6h0M302.8 158.1h0M158.3 34.3h0M300.3 201.5h0M338.3 186h0M346.9 194.3h0M341.2 203.2h0M335.4 183.4h0" stroke="#1baf7a" stroke-width="5.9"/><path d="M270.5 203.6h0M295.2 204.2h0M323.3 226.3h0M275.1 210.1h0M322.6 226.2h0M316.3 212.9h0M313.4 215.6h0M275.2 207.8h0M285.9 225.8h0M317.2 228.8h0M322.4 222.3h0M280.7 222.1h0M287.8 223.5h0M236.7 113.6h0M269.6 200.9h0M276.1 209.7h0M280.3 222.5h0M304.1 216.3h0M305.1 216.5h0M271.9 206.9h0M325.2 227.1h0M315.9 222.5h0M327.9 225.3h0M303.7 217.7h0M287.9 200.9h0M271.3 152.6h0M324.1 227.8h0M302.9 209h0M304.3 214.3h0M277.5 226.8h0M268.9 201.1h0M278.3 224h0M289.8 221.6h0M281.5 217h0M279.3 223.4h0M312.5 224.9h0M311.2 229.4h0M294.3 228.1h0M304.3 211.6h0M268.8 195.6h0M299.3 216.5h0M305.9 212.2h0M319.6 226.7h0M318.3 222.9h0M303.1 212.2h0M278.1 226.5h0M334.3 216.9h0M331.9 221.4h0M295.2 217.4h0M276.8 219.2h0M296 224.7h0" stroke="#eb6834" stroke-width="5.9"/><path d="M65.9 17.9h0M62.9 24.8h0M62.9 15.8h0M57.3 18.4h0M73.2 37.5h0M80 42.5h0M56.7 23.8h0M65.5 15.3h0M64.9 12.6h0M66 31.4h0M70.4 18.7h0M85.1 22.4h0M77.9 39.2h0M70.2 13.5h0M54.3 38.8h0M72.1 31h0M66 31h0M53.1 30.3h0M40.7 92.7h0M68.6 31.3h0M59.7 16.5h0M79 31.3h0M73.5 12.7h0M31.3 53.1h0M69.2 42.1h0M67.5 34.1h0M66.9 16.3h0M61 20.9h0M62 14.5h0M61.9 30.2h0M66.4 36.6h0" stroke="#2a78d6" stroke-width="5.9"/><path d="M22.5 75.8h0M23.5 88h0M19.5 93.4h0M25.8 89.9h0M16.8 94.1h0M44.3 82.8h0M25.3 89.9h0M17 90.8h0M50.7 90.2h0M29.4 82.4h0M35.8 92.6h0M29.2 87.8h0M48.1 93.6h0M18.2 93.9h0M53.2 87.8h0M31.8 77.2h0M48.9 92.9h0M39.6 87.3h0M44.5 85.1h0M29.3 89.8h0M31.1 91.3h0M21.9 75.5h0M28.3 77.8h0M19.4 91.2h0M18.7 93.9h0M54 92h0M16.9 92.2h0M34.1 88h0M12.6 92.8h0M39.7 87.7h0M48.7 72.9h0M48.6 78.8h0M33.6 93.4h0M28.5 91h0M45.1 93.4h0" stroke="#e87ba4" stroke-width="5.9"/><path d="M38.1 27h0M19.1 60.4h0M37.5 24.2h0M34.6 43h0M76.1 53.9h0M43.7 42h0M27.7 44.7h0M40.4 67.5h0M47 49.5h0M25.6 20.5h0M41.2 60.1h0M26.7 46.3h0M62.1 72.6h0M73.9 53.7h0M21.4 60h0M30.7 42.6h0M21.2 62.5h0M54.1 78.2h0M61.4 75.6h0M20.9 61.7h0M26.6 22.8h0M29.9 25.9h0M71.9 52.4h0M72.8 52h0M45.2 69.1h0M43.6 62.3h0M66.4 62.9h0M38.7 41.1h0M37.2 29.2h0M26.7 22.3h0M40.9 60.7h0M70.9 65.1h0M32 68.6h0M65.6 63.8h0M20.8 62.3h0M26.6 25h0M36.4 26.6h0M21 55.8h0M27.2 22.4h0M36.1 25.9h0M275.1 99.6h0M25.7 22.3h0M38.8 26.3h0M54.4 69h0M61.8 72.3h0M28.5 23.8h0M56.1 47.9h0" stroke="#6250d6" stroke-width="5.9"/><path d="M135.6 55.5h0M104.9 53.2h0M131.2 12.8h0M119.6 47.8h0M111.4 31.9h0M143.1 39.1h0M129.8 34.5h0M136.9 12h0M120.8 46.1h0M94.4 34.8h0M158.1 36.8h0M118.2 57.8h0M89.8 31h0M93.3 50.8h0M154.1 39.8h0M135.5 13h0M118 23.1h0M141.6 12.7h0M131 13.6h0M104.2 29.3h0M83.5 35.2h0M127.2 47.2h0M160.2 32.3h0M139.7 37.3h0M144.9 40.2h0M153.2 26h0M107.1 30.5h0M132.3 18.7h0M160.9 34h0M122.4 23.4h0M141 14.4h0M135.3 14.1h0M91.2 29.6h0M145.5 36.7h0M127 37.3h0M158.1 34.2h0M115.8 27.8h0M132.4 13.4h0M121.7 43.3h0M121.1 22.2h0M109.3 47.4h0M134.1 34.4h0M143.7 13.7h0M108.1 52.7h0M123.9 40.8h0M114.6 54.1h0M81.7 35.7h0M134.6 33.7h0M96.7 29.9h0M128.7 61.9h0M114 56h0M147.5 17.6h0M107.7 38.4h0M85.1 33.8h0M150.6 43.8h0M132.9 41.7h0M128.4 26.1h0M135.5 45.9h0M134.1 19h0M160.7 30h0M137.8 36.7h0M134.6 14.4h0M87.6 34h0M131.3 31h0M144.6 43.3h0M130.9 15.6h0" stroke="#008300" stroke-width="5.9"/><path d="M288 224.4h0M90 87.9h0M129.6 87.6h0M121.4 75.8h0M94.9 91.4h0M278.8 223.9h0M127.7 106.5h0M114.8 61h0M127.7 85.6h0M109.8 95.2h0M105.2 98.3h0M132.5 78.4h0M118.7 88.8h0M72.9 93.5h0M106.9 95.4h0M107 105.7h0M331.5 200.8h0M68.9 79.7h0M116.7 102.5h0M134.3 81.1h0M118.4 95.6h0M127.1 79.9h0M122.1 98.6h0M76.3 82.4h0M120.3 89h0M117.5 109.3h0M85.9 89.9h0M108.5 96.1h0M25.3 99.4h0M120.6 96.6h0M246.2 127h0M104.6 91.5h0M114.8 110.8h0M114.1 111.8h0M114.2 92.8h0M127 100.7h0M107.3 106.8h0M135.2 76.2h0M83.3 91.4h0M115.2 112.8h0M123.3 105.7h0M325.9 193.5h0M114 87.1h0M116.3 97.6h0M116.1 113.1h0M130.8 72.4h0M89.7 89.7h0M108.7 93.5h0M84.7 87.4h0M114.4 97.9h0M138.1 76.8h0M118.2 89.9h0M123.3 101.9h0M116.7 114.9h0M78.7 84.6h0M82.1 91.5h0" stroke="#eda100" stroke-width="5.9"/></g><path d="M15.8 48.9l5.3 5.3 -5.3 5.3 -5.3 -5.3zM293.4 108.9l5.3 5.3 -5.3 5.3 -5.3 -5.3zM292.4 203.4l5.3 5.3 -5.3 5.3 -5.3 -5.3zM80 15.9l5.3 5.3 -5.3 5.3 -5.3 -5.3zM127.3 99.8l5.3 5.3 -5.3 5.3 -5.3 -5.3zM76.8 11.3l5.3 5.3 -5.3 5.3 -5.3 -5.3zM299.1 224.7l5.3 5.3 -5.3 5.3 -5.3 -5.3zM73.9 12.7l5.3 5.3 -5.3 5.3 -5.3 -5.3zM102.2 82.6l5.3 5.3 -5.3 5.3 -5.3 -5.3zM282.3 205.1l5.3 5.3 -5.3 5.3 -5.3 -5.3zM82.3 71.3l5.3 5.3 -5.3 5.3 -5.3 -5.3zM139.3 41.7l5.3 5.3 -5.3 5.3 -5.3 -5.3zM144.3 43l5.3 5.3 -5.3 5.3 -5.3 -5.3zM142.7 22.5l5.3 5.3 -5.3 5.3 -5.3 -5.3zM282.3 207.6l5.3 5.3 -5.3 5.3 -5.3 -5.3zM24.9 26.1l5.3 5.3 -5.3 5.3 -5.3 -5.3zM25.4 17.3l5.3 5.3 -5.3 5.3 -5.3 -5.3zM25.9 42l5.3 5.3 -5.3 5.3 -5.3 -5.3zM143.9 75.3l5.3 5.3 -5.3 5.3 -5.3 -5.3zM331.1 219.3l5.3 5.3 -5.3 5.3 -5.3 -5.3zM209.3 91.9l5.3 5.3 -5.3 5.3 -5.3 -5.3zM89.6 81l5.3 5.3 -5.3 5.3 -5.3 -5.3zM232.2 116.2l5.3 5.3 -5.3 5.3 -5.3 -5.3z" fill="#1b1317" stroke="#ffffff" stroke-width="1.3"/><path d="M320.5 184.9l5.3 5.3 -5.3 5.3 -5.3 -5.3zM142.2 102.5l5.3 5.3 -5.3 5.3 -5.3 -5.3zM134 95.8l5.3 5.3 -5.3 5.3 -5.3 -5.3zM306.2 202.6l5.3 5.3 -5.3 5.3 -5.3 -5.3zM327.6 205.1l5.3 5.3 -5.3 5.3 -5.3 -5.3zM110.5 80.9l5.3 5.3 -5.3 5.3 -5.3 -5.3zM275.7 84.3l5.3 5.3 -5.3 5.3 -5.3 -5.3z" fill="#ffffff" stroke="#1b1317" stroke-width="1.6"/></svg><p class="ss-key"><span><i></i>Real candy</span><span><i class="kr"></i>Empty spot</span><span><i class="kd"></i>New candy</span></p></div>
+<div class="ss-sheet">
+<div class="ss-head"><p class="ss-cap">Claude’s map of the 404 real candies</p><p class="ss-hint" id="ssHint"></p><button class="ss-tb" id="ssTour" type="button" hidden>Pause tour</button></div>
+<div class="ss-box" id="ssBox"><svg class="ss-map" viewBox="0 0 360 240" aria-hidden="true" focusable="false"><g fill="#ffe6ef" fill-opacity=".85" stroke="#1b1317" stroke-opacity=".9" stroke-width="0.9" stroke-dasharray="2.1 1.8"><circle cx="142.5" cy="26.8" r="10.4"/><circle cx="288.1" cy="210.3" r="9.4"/><circle cx="62.7" cy="54.4" r="9.3"/><circle cx="44.9" cy="33.4" r="8.7"/><circle cx="251.5" cy="118.1" r="8.2"/><circle cx="120" cy="34.2" r="7.6"/><circle cx="35.6" cy="63.7" r="6.1"/><circle cx="234.8" cy="107.9" r="6"/><circle cx="336.2" cy="195.9" r="5.7"/><circle cx="111.3" cy="102.4" r="5.4"/><circle cx="114.4" cy="48.8" r="5.3"/></g><g fill="none" stroke-linecap="round"><path d="M135.6 55.5h0M288 224.4h0M65.9 17.9h0M104.9 53.2h0M270.5 203.6h0M131.2 12.8h0M238.9 114.3h0M295.2 204.2h0M272.8 98.3h0M119.6 47.8h0M243.4 124h0M66.7 79.5h0M111.4 31.9h0M143.1 39.1h0M38.1 27h0M273.2 111.8h0M129.8 34.5h0M323.3 226.3h0M285 153.1h0M19.1 60.4h0M90 87.9h0M304.8 158.7h0M270.4 111h0M129.6 87.6h0M275.1 210.1h0M241.7 104.9h0M22.5 75.8h0M226.9 114.1h0M245.8 112.3h0M121.4 75.8h0M37.5 24.2h0M94.9 91.4h0M341.9 190.4h0M23.5 88h0M62.9 24.8h0M19.5 93.4h0M34.6 43h0M136.9 12h0M322.6 226.2h0M301.3 156.9h0M62.9 15.8h0M278.8 223.9h0M25.8 89.9h0M316.3 212.9h0M286.7 136.3h0M76.1 53.9h0M325.4 194.7h0M120.8 46.1h0M261.4 133.7h0M94.4 34.8h0M235 101.9h0M158.1 36.8h0M57.3 18.4h0M127.7 106.5h0M118.2 57.8h0M89.8 31h0M43.7 42h0M287.8 115.9h0M313.4 215.6h0M73.2 37.5h0M275.2 207.8h0M286.5 151.9h0M80 42.5h0M270.5 99.3h0M16.8 94.1h0M285.9 225.8h0M56.7 23.8h0M114.8 61h0M93.3 50.8h0M317.2 228.8h0M289.1 152.7h0M345.2 197.6h0M44.3 82.8h0M65.5 15.3h0M127.7 85.6h0M25.3 89.9h0M154.1 39.8h0M64.9 12.6h0M135.5 13h0M17 90.8h0M260.6 93.5h0M328 187.7h0M109.8 95.2h0M118 23.1h0M50.7 90.2h0M105.2 98.3h0M132.5 78.4h0M118.7 88.8h0M72.9 93.5h0M29.4 82.4h0M141.6 12.7h0M285.8 152.1h0M131 13.6h0M307.8 162.7h0M35.8 92.6h0M29.2 87.8h0M48.1 93.6h0M27.7 44.7h0M18.2 93.9h0M258.7 89.6h0M106.9 95.4h0M104.2 29.3h0M334 201.2h0M322.4 222.3h0M280.7 222.1h0M287.8 223.5h0M267.4 93.4h0M107 105.7h0M53.2 87.8h0M331.5 200.8h0M276.4 112.4h0M255.6 111.1h0M40.4 67.5h0M280.4 150.6h0M31.8 77.2h0M83.5 35.2h0M47 49.5h0M68.9 79.7h0M236.7 113.6h0M127.2 47.2h0M66 31.4h0M25.6 20.5h0M160.2 32.3h0M272.2 95.8h0M269.6 200.9h0M278.7 111.9h0M116.7 102.5h0M134.3 81.1h0M274.9 121.7h0M41.2 60.1h0M291.6 123.8h0M139.7 37.3h0M270.7 95.6h0M70.4 18.7h0M344.9 198.6h0M118.4 95.6h0M26.7 46.3h0M255 125.5h0M144.9 40.2h0M276.1 209.7h0M48.9 92.9h0M62.1 72.6h0M153.2 26h0M107.1 30.5h0M338.7 187.8h0M127.1 79.9h0M85.1 22.4h0M73.9 53.7h0M132.3 18.7h0M160.9 34h0M122.1 98.6h0M39.6 87.3h0M266 134.4h0M21.4 60h0M122.4 23.4h0M280.3 222.5h0M141 14.4h0M30.7 42.6h0M257.8 129.1h0M21.2 62.5h0M77.9 39.2h0M135.3 14.1h0M253.4 95.7h0M91.2 29.6h0M304.1 216.3h0M54.1 78.2h0M61.4 75.6h0M76.3 82.4h0M305.1 216.5h0M44.5 85.1h0M271.9 206.9h0M20.9 61.7h0M264.5 130.5h0M120.3 89h0M325.2 227.1h0M315.9 222.5h0M145.5 36.7h0M332.8 187.8h0M327.9 225.3h0M303.7 217.7h0M287.9 200.9h0M271.3 152.6h0M117.5 109.3h0M85.9 89.9h0M345.4 197h0M26.6 22.8h0M29.3 89.8h0M324.1 227.8h0M31.1 91.3h0M302.9 209h0M326.3 192.5h0M127 37.3h0M231.7 102.4h0M108.5 96.1h0M251.1 135.8h0M340.1 191.7h0M25.3 99.4h0M304.3 214.3h0M70.2 13.5h0M21.9 75.5h0M120.6 96.6h0M260.7 90.9h0M246.2 127h0M158.1 34.2h0M263.5 140.1h0M277.5 226.8h0M331.7 192.4h0M291.1 120.8h0M29.9 25.9h0M263.9 129.6h0M291.2 122.3h0M268.9 201.1h0M278.3 224h0M104.6 91.5h0M114.8 110.8h0M284.3 151.7h0M115.8 27.8h0M335.8 184.2h0M54.3 38.8h0M114.1 111.8h0M341 190h0M114.2 92.8h0M287.4 151.2h0M289.8 221.6h0M72.1 31h0M259.6 88h0M275.1 114.5h0M272.3 96.9h0M132.4 13.4h0M127 100.7h0M333 189.3h0M281.5 217h0M121.7 43.3h0M71.9 52.4h0M279.3 223.4h0M286.4 151.1h0M121.1 22.2h0M72.8 52h0M66 31h0M241.8 104.8h0M109.3 47.4h0M134.1 34.4h0M271 96.6h0M53.1 30.3h0M28.3 77.8h0M312.5 224.9h0M256.7 100.8h0M45.2 69.1h0M266 109.8h0M40.7 92.7h0M292.2 122.8h0M43.6 62.3h0M335 185.3h0M143.7 13.7h0M297.9 199.4h0M19.4 91.2h0M311.2 229.4h0M107.3 106.8h0M135.2 76.2h0M66.4 62.9h0M108.1 52.7h0M228.8 105.7h0M83.3 91.4h0M115.1 39.9h0M123.9 40.8h0M115.2 112.8h0M294.3 228.1h0M304.3 211.6h0M18.7 93.9h0M114.6 54.1h0M81.7 35.7h0M268.8 195.6h0M290.2 121.2h0M123.3 105.7h0M134.6 33.7h0M38.7 41.1h0M37.2 29.2h0M26.7 22.3h0M302.6 198.8h0M262.3 94.6h0M96.7 29.9h0M128.7 61.9h0M255.2 133.5h0M232.6 113.5h0M325.9 193.5h0M269.4 103.3h0M256.4 99.7h0M40.9 60.7h0M114 56h0M299.3 216.5h0M114 87.1h0M68.6 31.3h0M147.5 17.6h0M70.9 65.1h0M32 68.6h0M65.6 63.8h0M344.9 190.2h0M62 35.1h0M54 92h0M115.1 41.4h0M59.7 16.5h0M16.9 92.2h0M20.8 62.3h0M79 31.3h0M260.8 124.1h0M305.9 212.2h0M26.6 25h0M291.1 154.3h0M319.6 226.7h0M34.1 88h0M151.2 19.8h0M12.6 92.8h0M107.7 38.4h0M262.2 130.1h0M85.1 33.8h0M318.3 222.9h0M39.7 87.7h0M65.8 77.4h0M347.4 195.8h0M344.5 200.9h0M48.7 72.9h0M303.1 212.2h0M260.6 126.3h0M278.1 226.5h0M304 158.6h0M268.2 101.3h0M48.6 78.8h0M263.6 107.1h0M36.4 26.6h0M21 55.8h0M258 123.4h0M73.5 12.7h0M31.3 53.1h0M235.3 119.3h0M116.3 97.6h0M33.6 93.4h0M27.2 22.4h0M116.1 113.1h0M150.6 43.8h0M302.8 158.1h0M334.3 216.9h0M69.2 42.1h0M130.8 72.4h0M255.7 135.7h0M89.7 89.7h0M132.9 41.7h0M158.3 34.3h0M108.7 93.5h0M84.7 87.4h0M128.4 26.1h0M67.5 34.1h0M114.4 97.9h0M138.1 76.8h0M135.5 45.9h0M134.1 19h0M268 105.7h0M118.2 89.9h0M262 108.2h0M160.7 30h0M137.8 36.7h0M28.5 91h0M123.3 101.9h0M331.9 221.4h0M217.8 113.3h0M66.9 16.3h0M61 20.9h0M295.2 217.4h0M116.7 114.9h0M300.3 201.5h0M338.3 186h0M247.4 136.3h0M134.6 14.4h0M36.1 25.9h0M88 56h0M275.1 99.6h0M286.9 150.5h0M276.8 219.2h0M45.1 93.4h0M265.2 97.8h0M87.6 34h0M296 224.7h0M62 14.5h0M131.3 31h0M250 101.1h0M25.7 22.3h0M236.3 121.5h0M61.9 30.2h0M346.9 194.3h0M38.8 26.3h0M78.7 84.6h0M144.6 43.3h0M54.4 69h0M61.8 72.3h0M341.2 203.2h0M266.8 95.5h0M66.4 36.6h0M257 125.3h0M82.1 91.5h0M28.5 23.8h0M56.1 47.9h0M250.8 138.5h0M287.5 128.3h0M335.4 183.4h0M130.9 15.6h0" stroke="#ffffff" stroke-width="5.9"/><path d="M238.9 114.3h0M272.8 98.3h0M243.4 124h0M66.7 79.5h0M273.2 111.8h0M285 153.1h0M270.4 111h0M241.7 104.9h0M226.9 114.1h0M245.8 112.3h0M286.7 136.3h0M261.4 133.7h0M235 101.9h0M287.8 115.9h0M286.5 151.9h0M270.5 99.3h0M289.1 152.7h0M260.6 93.5h0M285.8 152.1h0M258.7 89.6h0M267.4 93.4h0M276.4 112.4h0M255.6 111.1h0M280.4 150.6h0M272.2 95.8h0M278.7 111.9h0M274.9 121.7h0M291.6 123.8h0M270.7 95.6h0M255 125.5h0M266 134.4h0M257.8 129.1h0M253.4 95.7h0M264.5 130.5h0M231.7 102.4h0M251.1 135.8h0M260.7 90.9h0M263.5 140.1h0M291.1 120.8h0M263.9 129.6h0M291.2 122.3h0M284.3 151.7h0M287.4 151.2h0M259.6 88h0M275.1 114.5h0M272.3 96.9h0M286.4 151.1h0M241.8 104.8h0M271 96.6h0M256.7 100.8h0M266 109.8h0M292.2 122.8h0M228.8 105.7h0M115.1 39.9h0M290.2 121.2h0M262.3 94.6h0M255.2 133.5h0M232.6 113.5h0M269.4 103.3h0M256.4 99.7h0M62 35.1h0M115.1 41.4h0M260.8 124.1h0M291.1 154.3h0M151.2 19.8h0M262.2 130.1h0M65.8 77.4h0M260.6 126.3h0M268.2 101.3h0M263.6 107.1h0M258 123.4h0M235.3 119.3h0M255.7 135.7h0M268 105.7h0M262 108.2h0M217.8 113.3h0M247.4 136.3h0M88 56h0M286.9 150.5h0M265.2 97.8h0M250 101.1h0M236.3 121.5h0M266.8 95.5h0M257 125.3h0M250.8 138.5h0M287.5 128.3h0" stroke="#e34948" stroke-width="4.8"/><path d="M304.8 158.7h0M341.9 190.4h0M301.3 156.9h0M325.4 194.7h0M345.2 197.6h0M328 187.7h0M307.8 162.7h0M334 201.2h0M344.9 198.6h0M338.7 187.8h0M332.8 187.8h0M345.4 197h0M326.3 192.5h0M340.1 191.7h0M331.7 192.4h0M335.8 184.2h0M341 190h0M333 189.3h0M335 185.3h0M297.9 199.4h0M302.6 198.8h0M344.9 190.2h0M347.4 195.8h0M344.5 200.9h0M304 158.6h0M302.8 158.1h0M158.3 34.3h0M300.3 201.5h0M338.3 186h0M346.9 194.3h0M341.2 203.2h0M335.4 183.4h0" stroke="#1baf7a" stroke-width="4.8"/><path d="M270.5 203.6h0M295.2 204.2h0M323.3 226.3h0M275.1 210.1h0M322.6 226.2h0M316.3 212.9h0M313.4 215.6h0M275.2 207.8h0M285.9 225.8h0M317.2 228.8h0M322.4 222.3h0M280.7 222.1h0M287.8 223.5h0M236.7 113.6h0M269.6 200.9h0M276.1 209.7h0M280.3 222.5h0M304.1 216.3h0M305.1 216.5h0M271.9 206.9h0M325.2 227.1h0M315.9 222.5h0M327.9 225.3h0M303.7 217.7h0M287.9 200.9h0M271.3 152.6h0M324.1 227.8h0M302.9 209h0M304.3 214.3h0M277.5 226.8h0M268.9 201.1h0M278.3 224h0M289.8 221.6h0M281.5 217h0M279.3 223.4h0M312.5 224.9h0M311.2 229.4h0M294.3 228.1h0M304.3 211.6h0M268.8 195.6h0M299.3 216.5h0M305.9 212.2h0M319.6 226.7h0M318.3 222.9h0M303.1 212.2h0M278.1 226.5h0M334.3 216.9h0M331.9 221.4h0M295.2 217.4h0M276.8 219.2h0M296 224.7h0" stroke="#eb6834" stroke-width="4.8"/><path d="M65.9 17.9h0M62.9 24.8h0M62.9 15.8h0M57.3 18.4h0M73.2 37.5h0M80 42.5h0M56.7 23.8h0M65.5 15.3h0M64.9 12.6h0M66 31.4h0M70.4 18.7h0M85.1 22.4h0M77.9 39.2h0M70.2 13.5h0M54.3 38.8h0M72.1 31h0M66 31h0M53.1 30.3h0M40.7 92.7h0M68.6 31.3h0M59.7 16.5h0M79 31.3h0M73.5 12.7h0M31.3 53.1h0M69.2 42.1h0M67.5 34.1h0M66.9 16.3h0M61 20.9h0M62 14.5h0M61.9 30.2h0M66.4 36.6h0" stroke="#2a78d6" stroke-width="4.8"/><path d="M22.5 75.8h0M23.5 88h0M19.5 93.4h0M25.8 89.9h0M16.8 94.1h0M44.3 82.8h0M25.3 89.9h0M17 90.8h0M50.7 90.2h0M29.4 82.4h0M35.8 92.6h0M29.2 87.8h0M48.1 93.6h0M18.2 93.9h0M53.2 87.8h0M31.8 77.2h0M48.9 92.9h0M39.6 87.3h0M44.5 85.1h0M29.3 89.8h0M31.1 91.3h0M21.9 75.5h0M28.3 77.8h0M19.4 91.2h0M18.7 93.9h0M54 92h0M16.9 92.2h0M34.1 88h0M12.6 92.8h0M39.7 87.7h0M48.7 72.9h0M48.6 78.8h0M33.6 93.4h0M28.5 91h0M45.1 93.4h0" stroke="#e87ba4" stroke-width="4.8"/><path d="M38.1 27h0M19.1 60.4h0M37.5 24.2h0M34.6 43h0M76.1 53.9h0M43.7 42h0M27.7 44.7h0M40.4 67.5h0M47 49.5h0M25.6 20.5h0M41.2 60.1h0M26.7 46.3h0M62.1 72.6h0M73.9 53.7h0M21.4 60h0M30.7 42.6h0M21.2 62.5h0M54.1 78.2h0M61.4 75.6h0M20.9 61.7h0M26.6 22.8h0M29.9 25.9h0M71.9 52.4h0M72.8 52h0M45.2 69.1h0M43.6 62.3h0M66.4 62.9h0M38.7 41.1h0M37.2 29.2h0M26.7 22.3h0M40.9 60.7h0M70.9 65.1h0M32 68.6h0M65.6 63.8h0M20.8 62.3h0M26.6 25h0M36.4 26.6h0M21 55.8h0M27.2 22.4h0M36.1 25.9h0M275.1 99.6h0M25.7 22.3h0M38.8 26.3h0M54.4 69h0M61.8 72.3h0M28.5 23.8h0M56.1 47.9h0" stroke="#6250d6" stroke-width="4.8"/><path d="M135.6 55.5h0M104.9 53.2h0M131.2 12.8h0M119.6 47.8h0M111.4 31.9h0M143.1 39.1h0M129.8 34.5h0M136.9 12h0M120.8 46.1h0M94.4 34.8h0M158.1 36.8h0M118.2 57.8h0M89.8 31h0M93.3 50.8h0M154.1 39.8h0M135.5 13h0M118 23.1h0M141.6 12.7h0M131 13.6h0M104.2 29.3h0M83.5 35.2h0M127.2 47.2h0M160.2 32.3h0M139.7 37.3h0M144.9 40.2h0M153.2 26h0M107.1 30.5h0M132.3 18.7h0M160.9 34h0M122.4 23.4h0M141 14.4h0M135.3 14.1h0M91.2 29.6h0M145.5 36.7h0M127 37.3h0M158.1 34.2h0M115.8 27.8h0M132.4 13.4h0M121.7 43.3h0M121.1 22.2h0M109.3 47.4h0M134.1 34.4h0M143.7 13.7h0M108.1 52.7h0M123.9 40.8h0M114.6 54.1h0M81.7 35.7h0M134.6 33.7h0M96.7 29.9h0M128.7 61.9h0M114 56h0M147.5 17.6h0M107.7 38.4h0M85.1 33.8h0M150.6 43.8h0M132.9 41.7h0M128.4 26.1h0M135.5 45.9h0M134.1 19h0M160.7 30h0M137.8 36.7h0M134.6 14.4h0M87.6 34h0M131.3 31h0M144.6 43.3h0M130.9 15.6h0" stroke="#008300" stroke-width="4.8"/><path d="M288 224.4h0M90 87.9h0M129.6 87.6h0M121.4 75.8h0M94.9 91.4h0M278.8 223.9h0M127.7 106.5h0M114.8 61h0M127.7 85.6h0M109.8 95.2h0M105.2 98.3h0M132.5 78.4h0M118.7 88.8h0M72.9 93.5h0M106.9 95.4h0M107 105.7h0M331.5 200.8h0M68.9 79.7h0M116.7 102.5h0M134.3 81.1h0M118.4 95.6h0M127.1 79.9h0M122.1 98.6h0M76.3 82.4h0M120.3 89h0M117.5 109.3h0M85.9 89.9h0M108.5 96.1h0M25.3 99.4h0M120.6 96.6h0M246.2 127h0M104.6 91.5h0M114.8 110.8h0M114.1 111.8h0M114.2 92.8h0M127 100.7h0M107.3 106.8h0M135.2 76.2h0M83.3 91.4h0M115.2 112.8h0M123.3 105.7h0M325.9 193.5h0M114 87.1h0M116.3 97.6h0M116.1 113.1h0M130.8 72.4h0M89.7 89.7h0M108.7 93.5h0M84.7 87.4h0M114.4 97.9h0M138.1 76.8h0M118.2 89.9h0M123.3 101.9h0M116.7 114.9h0M78.7 84.6h0M82.1 91.5h0" stroke="#eda100" stroke-width="4.8"/></g><path d="M15.8 49.9l4.3 4.3 -4.3 4.3 -4.3 -4.3zM293.4 109.8l4.3 4.3 -4.3 4.3 -4.3 -4.3zM292.4 204.3l4.3 4.3 -4.3 4.3 -4.3 -4.3zM80 16.9l4.3 4.3 -4.3 4.3 -4.3 -4.3zM127.3 100.7l4.3 4.3 -4.3 4.3 -4.3 -4.3zM76.8 12.2l4.3 4.3 -4.3 4.3 -4.3 -4.3zM299.1 225.7l4.3 4.3 -4.3 4.3 -4.3 -4.3zM73.9 13.7l4.3 4.3 -4.3 4.3 -4.3 -4.3zM102.2 83.6l4.3 4.3 -4.3 4.3 -4.3 -4.3zM282.3 206l4.3 4.3 -4.3 4.3 -4.3 -4.3zM82.3 72.2l4.3 4.3 -4.3 4.3 -4.3 -4.3zM139.3 42.6l4.3 4.3 -4.3 4.3 -4.3 -4.3zM144.3 44l4.3 4.3 -4.3 4.3 -4.3 -4.3zM142.7 23.5l4.3 4.3 -4.3 4.3 -4.3 -4.3zM282.3 208.5l4.3 4.3 -4.3 4.3 -4.3 -4.3zM24.9 27.1l4.3 4.3 -4.3 4.3 -4.3 -4.3zM25.4 18.2l4.3 4.3 -4.3 4.3 -4.3 -4.3zM25.9 42.9l4.3 4.3 -4.3 4.3 -4.3 -4.3zM143.9 76.3l4.3 4.3 -4.3 4.3 -4.3 -4.3zM331.1 220.3l4.3 4.3 -4.3 4.3 -4.3 -4.3zM209.3 92.8l4.3 4.3 -4.3 4.3 -4.3 -4.3zM89.6 81.9l4.3 4.3 -4.3 4.3 -4.3 -4.3zM232.2 117.2l4.3 4.3 -4.3 4.3 -4.3 -4.3z" fill="#1b1317" stroke="#ffffff" stroke-width="0.8"/><path d="M320.5 185.9l4.3 4.3 -4.3 4.3 -4.3 -4.3zM142.2 103.4l4.3 4.3 -4.3 4.3 -4.3 -4.3zM134 96.8l4.3 4.3 -4.3 4.3 -4.3 -4.3zM306.2 203.6l4.3 4.3 -4.3 4.3 -4.3 -4.3zM327.6 206l4.3 4.3 -4.3 4.3 -4.3 -4.3zM110.5 81.9l4.3 4.3 -4.3 4.3 -4.3 -4.3zM275.7 85.2l4.3 4.3 -4.3 4.3 -4.3 -4.3z" fill="#ffffff" stroke="#1b1317" stroke-width="1"/></svg><canvas id="ssCanvas" role="img" aria-label="Claude’s map of the 404 real candies, colored by family, with dashed rings on the 11 spots that stayed empty and diamonds for the 30 new candies"></canvas><div class="ss-tip" id="ssTip" role="status"></div></div>
+<div class="ss-legend" id="ssLegend" role="group" aria-label="Candy families"></div>
+<p class="ss-key"><span><i></i>Real candy</span><span><i class="kr"></i>Empty spot</span><span><i class="kd"></i>New candy</span></p>
+</div>
 </li>
 <li class="slot oc"><div class="oc-t"><span class="sl">Coming soon</span><h3>Offbook Chess</h3></div><img class="oc-pic" src="lab/offbook-archer-360.webp" srcset="lab/offbook-archer-360.webp 360w, lab/offbook-archer-720.webp 720w" sizes="230px" width="720" height="720" loading="lazy" decoding="async" alt="The Archer, an Offbook Chess piece: an ivory braided column with a bow and an arrow pointing up, on a bell-shaped base"></li>
 <li class="slot"><span class="sl">Coming soon</span><div><h3>Game Theory Monograph</h3><p class="sd">A CAS monograph on game theory and its applications in insurance, led by Agni Chatterjee with Betty Zhu and me.</p><a class="sa" href="https://www.casact.org/article/new-cas-monographs-explore-strategy-competition-and-extreme-risk" rel="noopener">Read the CAS announcement</a></div></li>
@@ -3235,6 +3285,378 @@ try { glOK = !!E.initGL(); } catch (err) { console.error(err); glOK = false; }
 if (!glOK) fail();
 else if (REDUCED) still();
 else kickLoop();
+})();
+</script>
+<script type="application/json" id="ss-data">{"dims":65,"families":[[1,"Gummies, jellies and chews","Gummies \u0026 chews",86,"#e34948"],[2,"Mints and gum","Mints \u0026 gum",32,"#1baf7a"],[3,"Fruit hard candy and tablets","Fruit hard candy",51,"#eb6834"],[4,"Filled chocolates and bars","Filled chocolate",31,"#2a78d6"],[5,"Solid chocolate","Solid chocolate",35,"#e87ba4"],[6,"Coated, wafer and aerated","Coated \u0026 wafer",47,"#6250d6"],[7,"Nut, seed and fruit sweets","Nut \u0026 seed sweets",66,"#008300"],[8,"Caramel, toffee and sugar work","Caramel \u0026 toffee",56,"#eda100"]],"real":[[9.427,10.421,7,"Bala de Coco","Supercoco",1.4414],[1.356,6.296,8,"Rock Candy Sticks","Chupa Chups",1.9626],[11.596,12.714,4,"Bon o Bon","Serenata de Amor",0.7589],[9.835,11.578,7,"Glorias","Taiwanese Milk Nougat",1.0485],[2.334,6.754,3,"Lucas Gusano","Pelon Pelo Rico",1.2958],[11.118,10.147,7,"Chikki","Pé de Moleque",1.2298],[6.099,7.051,1,"Camote de Santa Clara","Goiabada",0.977],[2.057,5.81,3,"Pass Pass Pulse","Ume Candy",1.4197],[6.365,5.58,1,"Wine Gums","Haribo Goldbears",0.2854],[9.888,10.955,7,"Bateel Dates","Cezerye",1.4711],[5.68,6.974,1,"Goiabada","Ate de Membrillo",0.8543],[9.215,13.317,1,"Fry's Turkish Delight","Big Turk",0.2255],[10.585,11.108,7,"Nougat de Montélimar","Turrón de Alicante",1.5406],[9.98,9.962,7,"Mazapán De la Rosa","Tahini Halva",0.9226],[11.532,13.88,6,"Tunnock's Caramel Wafer","Twix",0.8389],[5.843,5.703,1,"Swedish Fish","Haribo Goldbears",0.9026],[10.295,10.427,7,"Mazapán de Toledo","Frutta Martorana",1.5531],[0.919,4.957,3,"Smarties (US)","Pez",0.7889],[4.13,5.674,1,"Big League Chew","Big Babol",0.6753],[10.439,14.954,6,"Smarties (UK)","Lacasitos",0.4288],[8.652,12.509,8,"Arcor Butter Toffee","Cadbury Dairy Milk Eclairs (India)",0.6731],[3.708,4.97,2,"Wrigley's Spearmint","Center Fresh",0.9215],[5.902,5.804,1,"Red Vines","Twizzlers",0.9736],[8.252,10.981,8,"Philippine Polvorón","Mongolian Milk Tablets (nai pian)",1.5397],[2.038,6.643,3,"Vero Mango","Vero Elotes",0.2234],[6.433,6.846,1,"Pâte de Fruits","Camote de Santa Clara",1.2838],[9.813,14.983,5,"Hershey's Kisses","Lotte ABC Chocolate",0.7309],[6.231,7.509,1,"Musk Sticks","Parma Violets",1.9189],[6.104,6.764,1,"Pestil","Goiabada",1.6118],[8.794,11.175,8,"Omani Halwa","Peda",2.135],[11.644,13.874,6,"Lion Bar","Toffee Crisp",0.5099],[8.466,12.356,8,"Tootsie Roll","Arcor Butter Toffee",0.9384],[2.108,3.868,2,"Kendal Mint Cake","Polkagris",1.2123],[9.334,15.07,5,"Lotte Ghana Milk","Meiji Milk Chocolate",0.116],[11.359,12.901,4,"Kinder Bueno","Serenata de Amor",1.0956],[9.167,15.281,5,"Al Nassma Chocolate","Meiji Milk Chocolate",0.521],[10.952,14.179,6,"Whoppers","Maltesers",0.3897],[11.089,9.921,7,"Alegría","Simsimiya",0.98],[0.929,4.981,3,"SweeTarts","Smarties (US)",1.3323],[3.815,5.087,2,"Center Fresh","Wrigley's Spearmint",0.9215],[11.707,12.808,4,"Guylian Sea Shells","Patchi Chocolates",0.8724],[1.47,6.643,8,"Cotton Candy","Chupa Chups",2.0093],[9.236,15.002,5,"Hershey's Milk Chocolate Bar","Lotte Ghana Milk",0.2813],[1.505,5.087,3,"Sakuma Drops","Life Savers Five Flavor",0.9427],[4.76,5.434,1,"Minties","Black Jacks",1.8643],[10.102,12.694,6,"Crispy Crunch","Butterfinger",0.3361],[2.112,4.549,2,"Berlingots de Carpentras","Akide Şekeri",1.1558],[9.942,10.893,7,"Cezerye","Bateel Dates",1.4711],[5.119,6.383,1,"Laffy Taffy","Sugus",0.6758],[10.65,11.79,7,"PayDay","Pasteli",0.9826],[6.615,7.072,1,"Borrachitos","Pâte de Fruits",2.1016],[9.917,9.361,7,"Reese's Pieces","Dadinho",1.6216],[11.664,13.051,4,"Merci","Neuhaus Pralines",1.0535],[7.545,11.25,8,"Vanilia (ypovrichio)","Maple Sugar Candy",2.2285],[9.519,11.111,7,"Dodol","Kẹo Dừa (coconut candy)",1.3651],[10.842,11.932,7,"Mounds","Cherry Ripe",0.8326],[10.896,13.819,6,"Tunnock's Teacake","Krembo",0.3957],[5.532,5.185,1,"Liquorice Allsorts","Good \u0026 Plenty",1.8244],[1.43,5.227,3,"Life Savers Five Flavor","Sakuma Drops",0.9427],[10.766,12.637,4,"Snickers","Baby Ruth",0.4353],[2.125,6.618,3,"Lucas Muecas","Vero Elotes",0.6746],[4.16,5.607,1,"Hubba Bubba","Big Babol",0.2399],[10.503,12.424,4,"Goo Goo Cluster","Snickers",0.7679],[6.351,5.676,1,"Panditas","Haribo Goldbears",0.5556],[9.166,15.39,5,"Milka Alpine Milk Chocolate","Marabou Mjölkchoklad",0.3639],[1.323,6.39,3,"Fun Dip","Baby Bottle Pop",1.3861],[11.463,13.128,4,"Duplo","Kinder Bueno",1.1189],[9.43,11.275,8,"Rakovye Sheiki","Mary Jane",1.8551],[10.044,11.999,7,"Toffifee","Goo Goo Cluster",1.5834],[0.885,5.214,3,"Nerds","Pez",1.4315],[4.103,5.513,1,"Juicy Fruit","Hubba Bubba",0.7755],[1.795,3.816,2,"Altoids","Polo",0.665],[9.32,14.217,5,"Cadbury Wispa","Aero",0.5692],[11.699,12.702,4,"Sonho de Valsa","Serenata de Amor",0.441],[8.352,11.034,8,"Mysore Pak","Philippine Polvorón",1.6915],[9.242,15.02,5,"Cadbury Dairy Milk","Galaxy",0.1362],[9.841,9.546,7,"Amanatto","Yeonyanggaeng",1.3981],[11.807,12.698,4,"Bajadera","Gianduiotto",1.0178],[11.064,9.983,7,"Cracker Jack","Simsimiya",2.3548],[9.294,15.349,5,"Freia Melkesjokolade","Marabou Mjölkchoklad",0.0655],[6.676,6.0,1,"Jelly Babies","Haribo Goldbears",0.5626],[2.353,4.376,2,"Korean Red Ginseng Candy","Horehound Drops",1.0542],[8.166,11.822,8,"Lotte Malang Cow","Fujiya Milky",0.2741],[10.855,10.764,7,"Turrón de Alicante","Torrone di Cremona",0.8316],[8.968,14.045,5,"Kinder Chocolate","Carlos V",0.6955],[8.096,12.032,8,"Glico","Morinaga Milk Caramel",1.2575],[8.579,10.773,8,"Soan Papdi","Pişmaniye",1.9149],[8.321,11.412,8,"Jamoncillo de Leche","Scottish Tablet",1.5266],[8.61,13.224,8,"Rolo","Cadbury Dairy Milk Eclairs (India)",0.7982],[9.489,14.786,5,"Tirol Choco","Lindt Lindor",1.3439],[11.012,9.747,7,"Yeot-gangjeong","Sesame Candy (zhima tang)",1.1823],[4.159,5.633,1,"Malabar","Bazooka Bubble Gum",0.7632],[11.086,10.163,7,"Pé de Moleque","Palanqueta",0.9499],[3.526,4.895,2,"Chios Mastiha Gum (ELMA)","Korean Red Ginseng Candy",2.0408],[9.029,14.642,5,"Freddo Frog","Carlos V",0.6992],[9.282,14.85,5,"Aero","Galaxy",0.4292],[8.864,14.182,5,"Caramello Koala","Caramilk",0.7125],[10.955,14.461,6,"Smash!","Kranky",0.8231],[9.159,15.336,5,"Karl Fazer Milk Chocolate","Marabou Mjölkchoklad",0.0389],[6.847,6.033,1,"Haribo Tagada","Jelly Babies",0.8923],[8.186,11.935,8,"Fujiya Milky","Lotte Malang Cow",0.2741],[10.76,11.356,7,"Marzipankartoffeln","Niederegger Marzipan",1.2176],[1.773,4.283,2,"Parma Violets","Korean Red Ginseng Candy",1.4368],[1.079,4.951,3,"Konpeito","Candy Buttons",1.4667],[1.519,6.553,3,"Blow Pop","Bon Bon Bum",0.5266],[1.392,6.292,3,"Sherbet Fountain","Fun Dip",2.2257],[6.61,5.738,1,"Trolli Original Gummi Worms","Want Want QQ Gummies",0.4555],[7.79,12.039,8,"Walkers' Nonsuch Toffee","Sugar Daddy",1.4071],[9.034,13.926,5,"Ptasie Mleczko","Kinder Chocolate",1.5726],[1.814,4.379,8,"Arouset el-Moulid (sugar doll)","Candy Cane",2.6997],[5.785,5.586,1,"Hot Tamales","Ginger Chews",1.0908],[6.051,6.374,1,"Skittles","Fruit Pastilles",1.0461],[9.949,14.206,6,"After Eight","Andes Mints",0.8997],[4.272,5.828,1,"Nik-L-Nip Wax Bottles","Marukawa Gum",1.4722],[9.665,14.64,5,"Meiji Meltykiss","Lindt Lindor",1.3586],[10.745,12.214,7,"Prestígio","Bounty",0.3366],[10.572,13.769,6,"Schokokuss","Tunnock's Teacake",1.0172],[9.184,13.237,8,"Charleston Chew","Cadbury Curly Wurly",0.838],[6.15,7.126,3,"Edinburgh Rock","Camote de Santa Clara",1.7061],[9.833,10.657,7,"Kestane Şekeri","Marrons Glacés",0.6012],[11.073,12.849,4,"Dubai Chocolate","Fazer Geisha",1.4568],[11.91,14.293,6,"Black Thunder","Prince Polo",1.0086],[10.065,9.232,7,"Confetti di Sulmona","Dragées de Verdun",0.2386],[6.467,5.575,1,"Mike and Ike","Want Want QQ Gummies",0.4989],[2.45,6.762,3,"Pulparindo","Dulce de Tamarindo",1.5148],[5.78,5.493,1,"Huamei (preserved plum)","Ume Candy",2.1324],[7.814,11.632,8,"Galatine","Mongolian Milk Tablets (nai pian)",1.0468],[8.455,10.733,8,"Pişmaniye","Pashmak",1.5788],[5.443,5.741,1,"Ginger Chews","Hot Tamales",1.0908],[10.225,14.102,6,"Mon Chéri","Anthon Berg Chocolate Liqueurs",0.8354],[5.191,5.119,1,"Venco Dubbel Zout","Djungelvrål",0.9123],[10.084,10.073,7,"Paçoquita","Mazapán De la Rosa",1.0492],[6.49,5.632,1,"Want Want QQ Gummies","Haribo Goldbears",0.2431],[11.517,12.55,4,"Baci Perugina","Mozartkugel",1.2357],[1.76,3.839,2,"Tic Tac","Pastilles Vichy",1.3704],[8.06,11.494,8,"Mongolian Milk Tablets (nai pian)","Galatine",1.0468],[10.907,14.517,6,"Kranky","Smash!",0.8231],[5.5,6.546,1,"Hobak-yeot","Sugus",1.6432],[9.921,9.903,7,"Dadinho","Mazapán De la Rosa",1.0797],[2.042,6.602,3,"Vero Elotes","Vero Mango",0.2234],[8.882,14.143,5,"Carlos V","Kinder Chocolate",0.6955],[9.528,13.425,6,"Paleta Payaso","Bubulubu",1.3175],[10.381,9.437,7,"Rewari","Mlabbas",1.3474],[10.684,11.259,7,"Turrón Misky","Pasteli",1.0854],[2.239,3.966,2,"Fox's Glacier Mints","Polo",0.9134],[8.574,10.997,8,"Peda","Jamoncillo de Leche",1.6129],[11.222,12.021,4,"Mozartkugel","Baci Perugina",1.2357],[10.134,12.774,6,"Butterfinger","Crispy Crunch",0.3361],[10.877,10.166,7,"Kashata","Til Ladoo",0.8958],[9.994,9.222,7,"Boston Baked Beans","Dragées de Verdun",1.3123],[7.907,11.382,8,"Peeps","Jet-Puffed Marshmallows",1.2222],[9.194,14.441,5,"Cadbury Flake","Cadbury Wispa",0.907],[5.045,6.213,1,"Fruit by the Foot","Laffy Taffy",1.2524],[10.432,14.864,6,"Lacasitos","M\u0026M's Milk Chocolate",0.4109],[10.801,10.595,7,"Coconut Drops","Cocada",1.2177],[1.507,6.57,3,"Push Pop","Ring Pop",0.5378],[10.953,9.788,7,"Sesame Candy (zhima tang)","Simsimiya",0.8849],[11.008,14.325,6,"Maltesers","Whoppers",0.3897],[5.333,6.475,1,"Crown Mychew","Hi-Chew",0.1899],[10.336,14.894,6,"Meiji Apollo","Jaffas",1.4541],[10.651,12.474,4,"Baby Ruth","Snickers",0.4353],[11.026,10.003,7,"Simsimiya","Palanqueta",0.6736],[6.666,6.299,1,"Cuberdon","Jelly Babies",1.2379],[10.884,11.863,7,"Idaho Spud","Mounds",1.7308],[1.501,5.59,3,"Everlasting Gobstopper","Lemonheads",1.2606],[9.394,13.793,6,"3 Musketeers","Cadbury Wispa",0.7252],[9.42,13.483,6,"Bananica","Bubulubu",1.0854],[9.002,12.978,8,"Cadbury Curly Wurly","Cadbury 5 Star",0.58],[1.48,5.555,3,"Lemonheads","Nobel Super Lemon",0.7778],[9.227,14.231,5,"Caramilk","Caramello Koala",0.7125],[2.193,6.736,3,"Lucas Polvo","Lucas Gusano",1.9995],[10.373,14.899,6,"M\u0026M's Milk Chocolate","Lacasitos",0.4109],[5.212,6.232,1,"Puccho","Maoam",0.9057],[8.297,11.353,8,"Pastillas de Leche","Yema",0.7516],[0.865,4.892,3,"Pez","Love Hearts",0.6337],[1.14,5.203,3,"Flying Saucers","Haw Flakes",1.7216],[10.047,9.843,7,"Chick-O-Stick","Mazapán De la Rosa",1.5043],[2.3,4.193,2,"Pan Pasand","Nin Jiom Herbal Candy",1.1274],[0.907,4.769,3,"Morinaga Ramune","Pez",1.2814],[1.451,5.623,3,"Toxic Waste","Nobel Super Lemon",0.8515],[2.258,6.056,3,"Parle Kaccha Mango Bite","Pass Pass Pulse",1.4694],[4.291,6.197,3,"Popin' Cookin'","Nerunerunerune",1.6799],[7.545,11.671,8,"Rapadura","Meiji Chelsea",1.469],[8.618,12.687,8,"Cadbury Dairy Milk Eclairs (India)","Arcor Butter Toffee",0.6731],[1.817,3.804,2,"Pastilles Vichy","Polo",0.7158],[11.812,14.277,6,"Kit Kat","Prince Polo",0.5998],[9.204,14.864,5,"Galaxy","Cadbury Dairy Milk",0.1362],[0.852,4.942,3,"Love Hearts","Pez",0.6337],[9.126,14.811,5,"Yorkie","Galaxy",0.4758],[1.793,5.563,3,"Ume Candy","Nobel Super Lemon",0.9511],[2.186,4.492,2,"Akide Şekeri","Berlingots de Carpentras",1.1558],[10.218,10.562,7,"Frutta Martorana","Mazapán de Toledo",1.5531],[6.631,7.205,1,"Cevizli Sucuk","Pestil",1.688],[8.145,11.881,8,"Morinaga Milk Caramel","Fujiya Milky",0.4707],[5.145,6.802,1,"Drumstick Lolly","Fizzers",1.4536],[2.074,3.953,2,"Polkagris","Candy Cane",0.7779],[8.877,15.116,8,"Fudge","Al Nassma Chocolate",1.6908],[1.574,5.563,3,"Zotz","Nimm2",0.6557],[11.72,12.502,4,"Ferrero Rocher","Serenata de Amor",0.8705],[9.831,15.002,5,"Lotte ABC Chocolate","Hershey's Kisses",0.7309],[8.0,11.42,8,"Scottish Tablet","Krówki",1.1912],[6.774,5.968,1,"Circus Peanuts","Jelly Babies",0.802],[5.535,6.898,8,"Salt Water Taffy","Tootsie Roll",1.662],[10.017,9.335,7,"Dragées de Verdun","Confetti di Sulmona",0.2386],[4.851,6.37,1,"Airheads","Maoam",1.1056],[1.371,6.725,3,"Bon Bon Bum","Blow Pop",0.5266],[2.134,4.281,2,"Horehound Drops","Korean Red Ginseng Candy",1.0542],[5.31,5.107,1,"Good \u0026 Plenty","Katjes Katzen",1.2378],[11.657,14.183,6,"Coffee Crisp","Prince Polo",0.5905],[5.253,6.246,1,"Maoam","Sugus",0.7094],[5.251,5.118,1,"Haribo Lakritz Schnecken","Katjes Katzen",1.2914],[2.447,6.79,3,"Pelon Pelo Rico","Lucas Gusano",1.2958],[1.471,6.662,3,"Ring Pop","Push Pop",0.5378],[8.36,11.985,8,"White Rabbit Creamy Candy","Fujiya Milky",0.955],[7.512,11.789,8,"Werther's Original","Meiji Chelsea",0.6279],[4.19,5.689,1,"Marukawa Gum","Bazooka Bubble Gum",1.3236],[10.697,10.896,7,"Pasteli","PayDay",0.9826],[2.408,4.039,2,"Ryukakusan Nodo Sukkiri Candy","Ricola Swiss Herb Drops",0.7372],[10.911,13.377,4,"Conguitos","Morinaga Choco Ball",1.1362],[7.483,11.828,8,"Meiji Chelsea","Werther's Original",0.6279],[2.13,3.901,2,"Candy Cane","Polkagris",0.7779],[8.215,11.629,8,"Caramels au Beurre Salé","Morinaga Milk Caramel",0.8563],[4.179,5.563,1,"Dubble Bubble","Bazooka Bubble Gum",0.472],[1.442,6.198,3,"Dum Dums","Jolly Rancher Hard Candy",1.1849],[11.025,12.613,4,"Ragusa","Sublime",0.8186],[6.899,5.979,1,"Ahlgrens Bilar","Haribo Tagada",1.4658],[5.716,5.657,1,"Kabaya Tough Gummy","Swedish Fish",0.9659],[6.423,5.585,1,"SmartSweets","Meiji Kajyu Gummy",0.7504],[11.08,10.11,7,"Peanut Brittle","Chikki",1.2504],[7.775,11.217,8,"Maple Sugar Candy","Scottish Tablet",1.6723],[2.241,4.2,2,"Nin Jiom Herbal Candy","Ricola Swiss Herb Drops",0.8592],[1.707,6.47,3,"Nerunerunerune","Baby Bottle Pop",1.6458],[10.042,10.83,7,"Marrons Glacés","Kestane Şekeri",0.6012],[10.205,12.841,6,"Heath Bar","Daim",0.3105],[1.481,6.618,3,"Chupa Chups","Ring Pop",1.1892],[4.192,5.602,1,"Bazooka Bubble Gum","Dubble Bubble",0.472],[10.86,10.633,7,"Torrone di Cremona","Turrón de Alicante",0.8316],[10.209,12.803,6,"Daim","Heath Bar",0.3105],[11.089,12.847,4,"Cadbury Picnic","Lunch Bar",0.6259],[6.435,6.839,1,"Candied Winter Melon","Nerds Gummy Clusters",1.5815],[10.011,11.35,7,"Taiwanese Milk Nougat","Glorias",1.0485],[10.256,10.259,7,"Mantecol","Turrón de Jijona",1.0675],[6.447,5.63,1,"Haribo Goldbears","Want Want QQ Gummies",0.2431],[11.247,13.336,4,"Kinder Joy","Kinder Surprise",1.7079],[9.678,14.78,5,"Lindt Lindor","Cadbury Dairy Milk",1.0522],[1.082,5.358,3,"Candy Buttons","Konpeito",1.4667],[6.434,6.227,1,"Gushers","Kororo",0.8924],[9.835,14.039,6,"Junior Mints","York Peppermint Pattie",1.2912],[5.993,5.958,1,"Shigekix","Sour Patch Kids",0.8234],[8.976,14.456,4,"Duvalín","Choki-Choki",1.8839],[5.221,5.084,1,"Katjes Katzen","Djungelvrål",0.8528],[10.115,14.03,6,"Anthon Berg Chocolate Liqueurs","Mon Chéri",0.8354],[2.374,4.083,2,"Em-eukal","Ryukakusan Nodo Sukkiri Candy",0.7772],[10.955,9.677,7,"Mi Hua Tang (puffed rice candy)","Yeot-gangjeong",1.3965],[2.216,5.655,2,"Atomic Fireball","Hajmola Candy",1.5823],[9.253,15.262,5,"Ritter Sport Alpine Milk Chocolate","Alyonka",0.1666],[0.923,5.455,3,"Candy Necklace","Pez",1.2377],[7.743,12.038,8,"Sugar Daddy","Walkers' Nonsuch Toffee",1.4071],[8.634,10.649,8,"Dasik","Peda",1.805],[9.855,13.158,6,"Peppermint Crisp","Cadbury Crunchie",1.4299],[9.819,11.45,7,"Bit-O-Honey","Mary Jane",0.9784],[6.533,7.35,1,"Turkish Delight (lokum)","Agra Petha",1.5157],[8.585,12.804,8,"Parle Melody","Négus de Nevers",0.8517],[10.239,11.049,1,"Dominosteine","Liquorice Allsorts",1.8837],[10.116,10.719,7,"Calissons d'Aix","Kaju Katli",1.6999],[7.432,11.794,8,"Kopiko","Haagsche Hopjes",0.5373],[1.148,6.089,3,"Pixy Stix","Fun Dip",1.5054],[1.679,5.535,3,"Nobel Super Lemon","Lemonheads",0.7778],[9.157,15.316,5,"Alyonka","Freia Melkesjokolade",0.1383],[9.699,11.213,7,"Mary Jane","Abba-Zaba",0.8963],[10.745,12.292,7,"Almond Joy","Prestígio",0.665],[2.66,6.737,3,"Dulce de Tamarindo","Pulparindo",1.5148],[5.305,5.146,1,"Djungelvrål","Katjes Katzen",0.8528],[7.622,11.411,8,"Dalgona (ppopgi)","Maple Sugar Candy",1.9496],[10.277,10.231,7,"Sunflower Halva","Tahini Halva",1.2066],[10.98,14.0,6,"Krembo","Tunnock's Teacake",0.3957],[11.453,13.935,6,"Mars Bar","Milky Way (US)",0.4432],[11.829,14.271,6,"Kexchoklad","Prince Polo",0.3609],[2.188,5.47,2,"Tyrkisk Peber","Pass Pass Pulse",1.9005],[6.617,5.946,1,"Kororo","Meiji Kajyu Gummy",0.8464],[10.815,11.651,7,"Niederegger Marzipan","Mounds",1.0686],[9.253,10.752,7,"Supercoco","Bala de Coco",1.4414],[5.193,6.621,1,"Mamba","Hi-Chew",0.3427],[6.196,7.282,1,"Agra Petha","Turkish Delight (lokum)",1.5157],[2.152,4.516,8,"Nabat","Rock Candy Sticks",2.0364],[6.206,5.763,1,"Dots","Jujyfruits",0.4873],[6.478,6.224,1,"Fruit Pastilles","Meiji Kajyu Gummy",1.0425],[10.204,14.119,6,"Pocket Coffee","Mon Chéri",1.7177],[9.631,11.255,7,"Kẹo Dừa (coconut candy)","Mary Jane",1.3372],[1.541,5.779,3,"Warheads Extreme Sour Hard Candy","Nobel Super Lemon",1.0884],[8.432,11.576,8,"Obleas con Cajeta","Jamoncillo de Leche",2.0096],[11.052,12.749,4,"Lunch Bar","Cadbury Picnic",0.6259],[10.762,9.569,7,"Kinako Bou","Mi Hua Tang (puffed rice candy)",2.2106],[9.727,13.008,6,"Cadbury Crunchie","Violet Crumble",0.327],[9.992,14.543,6,"Andes Mints","After Eight",0.8997],[9.832,13.2,6,"Violet Crumble","Cadbury Crunchie",0.327],[2.083,3.752,2,"Amarelli Liquirizia","Fisherman's Friend",2.5606],[10.97,13.041,1,"Quality Street","Conguitos",1.8246],[8.863,13.939,5,"Valomilk","Rolo",1.2075],[10.182,11.065,1,"Gaz","Taiwanese Milk Nougat",1.7564],[11.714,12.939,4,"Neuhaus Pralines","Patchi Chocolates",0.7959],[9.24,15.366,5,"Marabou Mjölkchoklad","Karl Fazer Milk Chocolate",0.0389],[10.351,14.907,6,"Cadbury Gems","Lacasitos",0.8675],[10.945,12.349,4,"Reese's Peanut Butter Cups","Almond Joy",0.909],[5.496,6.306,1,"Mentos","Skittles",1.653],[1.64,5.48,3,"Sherbet Lemons","Zotz",0.9845],[11.728,14.3,6,"Nestlé Crunch","Kit Kat",0.6549],[4.022,5.451,1,"Canel's Gum","Marukawa Gum",1.4815],[0.939,5.104,3,"Pop Rocks","Nerds",1.6043],[9.222,14.663,5,"Chocolatina Jet","Galaxy",0.7807],[10.642,9.452,1,"Yeot","Hobak-yeot",2.0931],[9.261,15.537,5,"Terry's Chocolate Orange","Freia Melkesjokolade",1.257],[10.374,11.318,7,"Abba-Zaba","Mary Jane",0.8963],[5.249,6.314,1,"Hi-Chew","Crown Mychew",0.1899],[10.782,12.139,7,"Bounty","Prestígio",0.3366],[1.101,5.112,3,"Haw Flakes","Smarties (US)",0.9749],[9.179,14.443,5,"Kinder Surprise","Freddo Frog",0.8318],[9.305,13.331,1,"Big Turk","Fry's Turkish Delight",0.2255],[1.843,3.715,2,"Polo","Altoids",0.665],[1.677,3.879,2,"Anis de Flavigny","Pastiglie Leone",1.6849],[9.653,13.946,5,"Rom","Cadbury Wispa",1.4698],[1.668,5.588,3,"Nimm2","Zotz",0.6557],[5.414,6.337,1,"Botan Rice Candy","Laffy Taffy",1.047],[1.377,6.697,3,"Tootsie Pop","Blow Pop",1.5217],[3.724,5.0,2,"Lotte Xylitol Gum","Center Fresh",1.1654],[6.296,5.788,1,"Jujyfruits","Dots",0.4873],[9.429,14.009,5,"Fry's Chocolate Cream","Caramilk",1.3408],[6.123,6.025,1,"Twizzlers","Red Vines",0.9736],[11.565,13.941,6,"Milky Way (US)","Mars Bar",0.4432],[10.596,14.833,6,"Jaffas","Smarties (UK)",1.2744],[5.551,6.408,1,"Sugus","Mamba",0.3682],[11.717,12.368,4,"Raffaello","Ferrero Rocher",1.0751],[10.598,14.41,4,"Morinaga Choco Ball","Conguitos",1.1362],[5.945,7.239,1,"Bocadillo Veleño","Ate de Membrillo",0.8465],[8.005,11.597,8,"Jet-Puffed Marshmallows","Peeps",1.2222],[9.022,14.737,5,"Choki-Choki","Freddo Frog",1.1335],[11.82,14.249,6,"Prince Polo","Kexchoklad",0.3609],[7.411,11.765,8,"Haagsche Hopjes","Kopiko",0.5373],[9.722,9.722,7,"Yeonyanggaeng","Yokan",1.1544],[3.755,5.04,2,"Trident","Wrigley's Spearmint",1.1167],[1.164,4.436,3,"Necco Wafers","Sweethearts Conversation Hearts",1.5039],[10.629,12.838,4,"Toblerone","Studentská Pečeť",1.0265],[8.827,10.779,8,"Sohan","Peanut Brittle",1.9045],[5.101,6.625,1,"Now and Later","Mamba",0.5859],[8.587,12.54,8,"Carambar","Tootsie Roll",1.1567],[9.985,10.381,7,"Kaju Katli","Tahini Halva",1.5286],[10.009,9.329,2,"Mukhwas (sugar-coated fennel)","Anis de Flavigny",2.5032],[8.241,11.846,8,"Krówki","Fujiya Milky",0.5904],[8.723,12.707,8,"Milk Duds","Arcor Butter Toffee",1.0482],[10.634,10.395,7,"Cocada","Coconut Drops",1.2177],[10.955,12.818,4,"Sublime","Ragusa",0.8186],[8.013,11.674,8,"Allen's Milk Bottles","Lotte Malang Cow",1.1509],[8.582,10.544,8,"Pashmak","Pişmaniye",1.5788],[9.8,10.325,7,"Choc Nut","Mazapán De la Rosa",1.5172],[10.847,10.103,7,"Til Ladoo","Kashata",0.8958],[6.13,5.841,1,"Jelly Belly","Mike and Ike",1.4889],[8.283,11.444,8,"Yema","Pastillas de Leche",0.7516],[6.094,6.098,1,"Sour Patch Kids","Shigekix",0.8234],[10.151,9.19,7,"Mlabbas","Dragées de Verdun",0.7661],[10.128,10.14,7,"Tahini Halva","Mazapán De la Rosa",0.9226],[9.164,14.908,5,"Meiji Milk Chocolate","Lotte Ghana Milk",0.116],[7.767,11.371,8,"Candy Corn","Peeps",1.6029],[1.018,4.574,3,"Sweethearts Conversation Hearts","Love Hearts",1.373],[6.356,7.851,1,"Insam Jeonggwa","Musk Sticks",2.3288],[11.647,12.66,4,"Serenata de Amor","Sonho de Valsa",0.441],[11.531,12.934,4,"Patchi Chocolates","Neuhaus Pralines",0.7959],[1.551,5.945,3,"Jolly Rancher Hard Candy","Warheads Extreme Sour Hard Candy",1.1626],[7.337,11.761,8,"Kanro Ame","Werther's Original",1.3265],[2.108,5.587,2,"Hajmola Candy","Pass Pass Pulse",1.5233],[2.312,3.961,2,"Bêtises de Cambrai","Fox's Glacier Mints",1.6141],[5.163,6.948,1,"Fizzers","Now and Later",1.1552],[11.02,10.033,7,"Gajak","Til Ladoo",1.4365],[11.593,13.943,6,"Twix","Toffee Crisp",0.6774],[9.899,12.259,1,"Szaloncukor","Fry's Chocolate Cream",1.8578],[6.291,5.505,6,"Pineapple Lumps","Haribo Goldbears",1.6318],[4.209,5.575,1,"Big Babol","Hubba Bubba",0.2399],[1.669,6.674,3,"Baby Bottle Pop","Ring Pop",0.8345],[8.901,14.293,5,"Cadbury Creme Egg","Caramilk",1.0559],[6.465,5.868,1,"Kasugai Gummy","Meiji Kajyu Gummy",0.5567],[10.75,12.046,7,"Cherry Ripe","Mounds",0.8326],[1.262,5.99,3,"Ahoj-Brause","Pixy Stix",1.7096],[11.765,12.829,4,"Gianduiotto","Bajadera",1.0178],[10.416,10.331,7,"Turrón de Jijona","Mantecol",1.0675],[6.494,6.485,1,"Nerds Gummy Clusters","Fruit Pastilles",1.0538],[11.839,14.308,6,"Kvikk Lunsj","Kit Kat",0.6371],[5.849,7.225,1,"Ate de Membrillo","Bocadillo Veleño",0.8465],[11.161,12.995,4,"Fazer Geisha","Ragusa",0.9914],[1.904,3.719,2,"Fisherman's Friend","Polo",1.6075],[11.551,13.843,6,"Toffee Crisp","Lion Bar",0.5099],[8.894,12.911,8,"Cadbury 5 Star","Cadbury Curly Wurly",0.58],[9.804,9.948,7,"Yokan","Yeonyanggaeng",1.1544],[9.745,13.683,6,"York Peppermint Pattie","Junior Mints",1.2912],[9.542,13.433,6,"Bubulubu","Bananica",1.0854],[1.621,4.028,2,"Pastiglie Leone","Parma Violets",1.4508],[6.535,5.783,1,"Meiji Kajyu Gummy","Want Want QQ Gummies",0.4035],[10.87,12.887,4,"Studentská Pečeť","Toblerone",1.0265],[5.488,6.467,1,"Starburst","Hi-Chew",0.1974],[8.594,12.852,8,"Négus de Nevers","Parle Melody",0.8517],[11.752,14.216,6,"Cadbury Double Decker","Coffee Crisp",0.7475],[10.542,13.402,6,"Flødeboller","Schokokuss",1.2264],[5.044,6.839,1,"Wham Bar","Fizzers",1.1675],[5.058,5.324,1,"Black Jacks","Katjes Katzen",1.5233],[2.445,4.049,2,"Ricola Swiss Herb Drops","Ryukakusan Nodo Sukkiri Candy",0.7372],[11.013,10.19,7,"Palanqueta","Simsimiya",0.6736]],"new":[[2.336,4.692,"Tollbrine Pearl",1.7194,"C","claude-11_tollbrine_pearl","A pale salted sugar-glass ball with mint, ginger and anise, left on the tongue to freshen breath."],[10.714,15.017,"Tesserine Hexes",2.0445,"A","claude-04_tesserine_hexes","Sugar-free chocolate hexagons with crisp tops in three shades that fit edge to edge into mosaics."],[5.543,4.951,"Totterstacks",1.5944,"A","claude-16_totterstacks","Flat sour salted licorice bears that stack into a wobbly tower; whoever topples it eats the fallen."],[7.349,10.706,"Emberpillows",1.9496,"C","claude-06_emberpillows","Glassy pillows of 85%-air egg-white foam, poured onto hot drinks at autumn bonfire fairs."],[1.914,5.962,"Duskbubble Currant Beads",1.5987,"A","claude-15_duskbubble_currant_beads","An autumn-only blackcurrant glass ball full of visible air bubbles that crunches easily."],[11.323,12.207,"Twinhalf Crunch Sphere",1.6731,"A","claude-13_twinhalf_crunch_sphere","A crunchy chocolate ball with hemp seeds that splits cleanly in two, with a collectible sticker in every wrap."],[7.607,11.25,"Chamomile Lambkins",1.5805,"A","claude-18_chamomile_lambkins","Sugar-free pressed-milk lambs with vanilla and a faint chamomile note, left to dissolve on the tongue."],[11.534,12.279,"Easter Bubblegum Almond Spheres",1.9648,"A","claude-05_easter_bubblegum_almond_spheres","Easter chocolate ball: crunchy almond heart, bubblegum dairy-free chocolate, soft glossy cream shell."],[1.024,5.925,"Amber Grain Stirrer",1.8208,"A","claude-09_amber_grain_stirrer","Sugar-free cola granules crusted on a tea-stirring stick, in the old teahouse crystal-sugar custom."],[11.509,12.408,"Whistling Wren",1.9169,"A","claude-07_whistling_wren","A chocolate-coated almond-chew songbird on a stick that becomes a working whistle once eaten."],[7.689,10.952,"Hollypane",1.7114,"-","claude-12_hollypane","A soft vanilla marshmallow slab on a stick; licking the white layer away turns it anise red."],[8.525,12.039,"Draughtwell",2.1491,"A","claude-03_draughtwell","Bitter herbal vanilla-caramel nougat discs that melt in the mouth and double as draughts (checkers) pieces."],[1.954,6.37,"Pip Trail",2.192,"A","claude-02_pip_trail","A dimpled watermelon sugar ball you lick and roll along a spiral tray of toasted watermelon-seed salt."],[9.167,12.69,"Café Leaf",1.6,"A","claude-14_cafe_leaf","A thin sugar-free, vegan sheet of vanilla cocoa butter over espresso, cocoa and chicory caramels."],[9.719,10.187,"Threshold Paddle",2.2698,"A","claude-01_threshold_paddle","Sugar-free aniseed and chicory tablet on a bamboo paddle that melts and fizzes; a host gift."],[1.802,5.422,"Morello Cocoa Rounds",1.0625,"C","claude-30_morello_cocoa_rounds","Clear ruby cherry hard-candy balls with a quiet chocolate note, left to melt; a big everyday bag."],[9.615,10.009,"Sandpillows",1.5937,"A","claude-17_sandpillows","Glassy gold pillows around loose roasted-almond powder that melts once the crisp skin gives way."],[10.421,9.862,"Peanut Shardslabs",1.5305,"A","claude-22_peanut_shardslabs","Scored roasted-peanut tablets laced with glassy sugar granules for a loud, clean crackle after dinner."],[1.858,6.395,"Stir-Bloom Rose",1.5547,"A","claude-21_stir_bloom_rose","A strawberry-rose candy flower you assemble on its stick, stir through water to turn it pink, then suck."],[11.497,14.433,"Spinner's Pick Malt Sticks",1.579,"A","claude-19_spinner_s_pick_malt_sticks","Chocolate-shelled sticks of airy sour malted-milk fudge, with a lid spinner that picks who takes the next."],[11.833,14.32,"Pipwork Party Die",1.7315,"A","claude-10_pipwork_party_die","A cocoa-coffee nougat die you finish by pressing in crisp cream pips, roll at the party, then eat."],[10.877,14.558,"Kasha Twirls",1.5678,"A","claude-20_kasha_twirls","Short twisted ropes of sugar-free cocoa foam with toasted buckwheat, passed round by the boxful."],[8.376,10.357,"Hearthwool",1.3534,"A","claude-24_hearthwool","Hand-pulled floss nests with toasted flour and a ginger-chili burn that melt in seconds and stain the tongue orange."],[0.902,4.637,"Wrenglass",1.4999,"A","claude-23_wrenglass","Baked starch-gel birds that crunch like glass, tasting of strawberry with vanilla and toasted sunflower seed."],[7.065,8.012,"Millstone Apricot Round",1.8265,"A","claude-08_millstone_apricot_round","A smooth apricot-and-buckwheat fruit disc with a faint cola note, made to close a meal."],[8.718,12.508,"Quarry Nugget",1.277,"A","claude-26_quarry_nugget","A moulded, glossy dark cocoa caramel nugget, whipped light, with a runny center of the same caramel."],[1.488,4.627,"Posy Scatter",1.1022,"C","claude-29_posy_scatter","Tiny pressed sugar blossoms, mildly sweet with faint pear and spearmint, poured out by the palmful at weddings."],[5.891,7.383,"Twin Strata",1.1449,"A","claude-28_twin_strata","Amber-over-ruby quince paste bars with orange blossom and a faint cocoa note, dispensed from a postbox after lunch."],[8.506,11.703,"Wintermilk Round",1.2932,"C","claude-25_wintermilk_round","A large cream-white pressed milk disc with vanilla, a faint yogurt tang and background cinnamon."],[6.672,5.379,"Fieldstone Jelly Cube",1.1618,"C","claude-27_fieldstone_jelly_cube","Four fruit and mint gels, chopped, pressed and fused into one even-textured speckled cube."]],"holes":[[10.463,9.858,0.416],[1.896,6.147,0.374],[10.223,13.212,0.372],[11.215,13.681,0.347],[5.821,6.604,0.326],[10.409,10.798,0.304],[10.142,14.353,0.242],[6.388,7.141,0.238],[1.952,4.145,0.227],[7.874,11.84,0.216],[9.905,11.166,0.212]]}</script>
+<script>
+/* Sweet Spots map for the Lab card: Claude's map of 404 real candies, with a guided tour of the 30 new candies.
+   Ported from the hero map of the Sweet Spots page: the same fitter, fly-in, marks, tour timing and tooltips.
+   Changes for this site:
+     - fixed light colours (the card is always the strawberry wrapper) and the site's fonts;
+     - the tour card is a picture, not a button: this site has no candy lightbox;
+     - the fly-in waits until the map scrolls into view, and nothing animates off-screen;
+     - a Pause tour button (WCAG 2.2.2); under prefers-reduced-motion the map is still and there is no tour.
+   Data: <script type="application/json" id="ss-data">, made by tools/lab/sweet_spots_data.py.
+   Pictures: lab/sweet-spots/<id>.webp, copied by the same tool. If this script can't run, the static SVG map stays. */
+(() => {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const box = $('#ssBox'), cv = $('#ssCanvas'), tip = $('#ssTip'), legend = $('#ssLegend'), hint = $('#ssHint'), btn = $('#ssTour');
+  if (!box || !cv || !tip || !legend || !hint || !btn) return;
+  let D;
+  try { D = JSON.parse($('#ss-data').textContent); } catch (e) { console.error('Sweet Spots map: data missing', e); return; }
+  const ctx = cv.getContext('2d'); if (!ctx) return;
+  const fallback = $('.ss-map', box); if (fallback) fallback.remove();   // the static map, for when this script can't run
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const median = arr => { const s = [...arr].sort((a, b) => a - b), h = (s.length - 1) / 2, lo = Math.floor(h); return s[lo] + (h - lo) * ((s[lo + 1] ?? s[lo]) - s[lo]); };
+  const x2 = v => `${v.toFixed(2)}×`;
+  const easeIO = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
+  const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const rgba = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+  const T = { ink: hex('#1b1317'), sheet: hex('#ffffff'), pop: hex('#ff4f86'), sugar: hex('#ffe6ef') };
+  const FONT = "'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  const tierWord = t => t === 'A' ? 'Tier A' : t === 'C' ? 'Tier C' : 'Not rated';
+  const nb = s => s.replace(/ /g, '\u00a0');   // keep "2.27× the typical gap" and "Tier A" whole when the card wraps
+  const pic = g => `lab/sweet-spots/${g}.webp`;
+  const diamond = (x, y, z) => { ctx.beginPath(); ctx.moveTo(x, y - z); ctx.lineTo(x + z, y); ctx.lineTo(x, y + z); ctx.lineTo(x - z, y); ctx.closePath(); };
+
+  /* data: compact arrays (see tools/lab/sweet_spots_data.py) */
+  const FAM = new Map(D.families.map(([f, name, short, count, ink]) => [f, { f, name, short, count, ink, rgb: hex(ink) }]));
+  const run = {
+    real: D.real.map(([x, y, f, n, nb, d]) => ({ x, y, f, n, nb, d })),
+    new: D.new.map(([x, y, n, nov, tier, g, pitch]) => ({ x, y, n, nov, tier, g, pitch })),
+    holes: D.holes.map(([x, y, r]) => ({ x, y, r })),
+  };
+
+  /* fit map coordinates into the box: uniform scale, y up, turned to fill the box (a UMAP picture has no fixed orientation) */
+  function fitter(W, H, pad) {
+    const pts = [];
+    run.real.forEach(p => pts.push([p.x, p.y, 0])); run.new.forEach(p => pts.push([p.x, p.y, 0])); run.holes.forEach(h => pts.push([h.x, h.y, h.r]));
+    const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cy = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+    const bw = W - pad.l - pad.r, bh = H - pad.t - pad.b;
+    let best = null;
+    for (let deg = 0; deg < 180; deg += 5) {
+      const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      for (const [x, y, r] of pts) { const u = (x - cx) * c - (y - cy) * s, v = (x - cx) * s + (y - cy) * c; x0 = Math.min(x0, u - r); x1 = Math.max(x1, u + r); y0 = Math.min(y0, v - r); y1 = Math.max(y1, v + r); }
+      const k = Math.min(bw / (x1 - x0), bh / (y1 - y0));
+      if (!best || k > best.k * 1.03) best = { k, c, s, x0, x1, y0, y1 };
+    }
+    const { k, c, s, x0, x1, y0, y1 } = best;
+    const ox = pad.l + (bw - (x1 - x0) * k) / 2, oy = pad.t + (bh - (y1 - y0) * k) / 2;
+    return { k, X: (x, y) => ox + ((x - cx) * c - (y - cy) * s - x0) * k, Y: (x, y) => oy + (y1 - ((x - cx) * s + (y - cy) * c)) * k };
+  }
+  function placeTip(px, py) {
+    tip.style.opacity = '1';
+    const tw = tip.offsetWidth, th = tip.offsetHeight, hw = box.clientWidth;
+    let l = px + 14, t = py - th - 12;
+    if (l + tw > hw - 4) l = px - tw - 14;
+    if (l < 4) l = Math.max(4, Math.min(hw - tw - 4, px - tw / 2));
+    if (t < 4) t = py + 16;
+    tip.style.left = `${l}px`; tip.style.top = `${t}px`;
+  }
+
+  const HINT = coarse ? 'Tap a candy to meet its family.' : 'Hover a candy to meet its family.';
+  const HINT_TOUR = coarse ? 'Touring the new candies. Tap the map to explore it yourself.' : 'Touring the new candies. Move over the map to explore it yourself.';
+  const DWELL = 3800, MOVE = 1050, IDLE = 30000;
+  let W = 0, H = 0, dpr = 1, F = null, R = 3, narrow = false, raf = 0, t0 = 0, introAt = 0, introDone = reduceMotion;
+  let visible = false, seen = false;   // any of the map on screen (it draws), a quarter of it (the fly-in and tour start)
+  let seed = 11; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const dots = run.real.map(p => ({ p, hx: 0, hy: 0, x: 0, y: 0, vx: 0, vy: 0, sx: rnd(), sy: rnd(), a: 1, at: 1 }));
+  const gems = run.new.map(p => ({ p, hx: 0, hy: 0, a: 1, at: 1 }));
+  const holes = run.holes.map(h => ({ h, hx: 0, hy: 0, r: 0 }));
+  let labels = [], labelA = 1, labelAt = 1, hoverFam = 0, pinFam = 0, hover = null, lastType = 'mouse';
+  const view = { s: 1, tx: 0, ty: 0 }; let vFrom = null, vTo = null, vT0 = 0, vDur = 0;
+  let mode = 'play', stop = null, tourI = 0, interactedOnce = false, resumeOnShow = false, autoplay = !reduceMotion;
+  let tourTimer = 0, tourTimer2 = 0, tourTimer3 = 0, idleTimer = 0, firstTimer = 0, resumeTimer = 0;
+  const order = [...gems].sort((a, b) => b.p.nov - a.p.nov);
+  const SX = x => x * view.s + view.tx, SY = y => y * view.s + view.ty;
+
+  // the tour card: a picture of the new candy pinned beside its diamond (decorative: the canvas carries the name)
+  const card = document.createElement('div');
+  card.className = 'tour'; card.hidden = true; card.setAttribute('aria-hidden', 'true');
+  box.appendChild(card);
+
+  legend.innerHTML = [...FAM.values()].map(f => `<button class="fam" type="button" data-f="${f.f}" aria-pressed="false"><i style="--sw:${f.ink}"></i>${esc(f.short)} <b>${f.count}</b></button>`).join('');
+  const syncLegend = () => legend.querySelectorAll('.fam').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.f === pinFam)));
+  const syncBtn = () => { btn.textContent = autoplay ? 'Pause tour' : 'Play tour'; btn.dataset.on = autoplay ? '1' : '0'; };
+  // where the map is, for the tests and tools: waiting (not yet seen), intro (dots flying in), play or tour
+  const setState = () => { box.dataset.state = !introAt ? 'waiting' : !introDone ? 'intro' : mode; };
+  hint.textContent = HINT; setState();
+  if (!reduceMotion) { btn.hidden = false; syncBtn(); }
+
+  function layoutLabels() {
+    labels = [];
+    if (narrow || !F) return;
+    const fs = 12.5;
+    ctx.font = `600 ${fs}px ${FONT}`;
+    FAM.forEach(f => {
+      const m = dots.filter(d => d.p.f === f.f); if (!m.length) return;
+      let x = median(m.map(d => d.hx)), y = median(m.map(d => d.hy));
+      const w = ctx.measureText(f.short).width + 8;
+      x = clamp(x, w / 2 + 4, W - w / 2 - 4); y = clamp(y, fs + 4, H - 6);
+      for (let n = 0; n < 12 && labels.some(l => Math.abs(l.x - x) < (l.w + w) / 2 && Math.abs(l.y - y) < fs + 4); n++) y += (n % 2 ? -1 : 1) * (fs + 5) * (n + 1);
+      labels.push({ x, y, w, text: f.short, f: f.f });
+    });
+  }
+  function layout() {
+    const b = box.getBoundingClientRect(); W = b.width; H = b.height; if (!W || !H) return false;
+    narrow = W < 520; box.classList.toggle('narrow', narrow);
+    dpr = Math.min(2, devicePixelRatio || 1); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    F = fitter(W, H, narrow ? { l: 6, r: 6, t: 8, b: 8 } : { l: 10, r: 10, t: 12, b: 10 });
+    R = clamp(W / 150, 2.6, 4.5);
+    dots.forEach(d => {
+      d.hx = F.X(d.p.x, d.p.y); d.hy = F.Y(d.p.x, d.p.y);
+      if (!introAt && !reduceMotion) { d.x = d.sx * W; d.y = d.sy * H; }   // scattered until the fly-in starts
+      else { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; }
+    });
+    gems.forEach(g => { g.hx = F.X(g.p.x, g.p.y); g.hy = F.Y(g.p.x, g.p.y); });
+    holes.forEach(o => { o.hx = F.X(o.h.x, o.h.y); o.hy = F.Y(o.h.x, o.h.y); o.r = Math.max(7, o.h.r * F.k); });
+    layoutLabels();
+    return true;
+  }
+  function targets() {
+    const eff = hoverFam || pinFam;
+    if (mode === 'tour') {
+      dots.forEach(d => { d.at = 0.42; }); gems.forEach(g => { g.at = stop && g === stop ? 1 : 0.4; }); labelAt = 0;
+    } else {
+      dots.forEach(d => { d.at = eff && d.p.f !== eff ? 0.14 : 1; }); gems.forEach(g => { g.at = eff ? 0.55 : 1; }); labelAt = narrow ? 0 : 1;
+    }
+    wake();
+  }
+  function tweenView(to, dur) {
+    if (reduceMotion || !dur) { Object.assign(view, to); vTo = null; wake(); return; }
+    vFrom = { ...view }; vTo = to; vT0 = performance.now(); vDur = dur; wake();
+  }
+
+  /* ---- the fly-in starts the first time the map is in view; the tour follows unless the visitor got there first ---- */
+  function begin() {
+    if (introAt || !W || !seen) return;
+    introAt = t0 = performance.now(); setState(); wake();
+    if (autoplay) firstTimer = setTimeout(() => { if (!interactedOnce) startTour(); }, 2300);
+  }
+
+  /* ---- tour ---- */
+  function placeCard() {
+    if (!stop) return;
+    const s = view.s, fx = stop.hx * s + view.tx, fy = stop.hy * s + view.ty;
+    const cw = narrow ? Math.min(170, W * 0.5) : Math.min(250, W * 0.38);
+    card.style.setProperty('--cw', `${cw}px`);
+    const right = stop.side === 'right';
+    let x = right ? fx + 26 : fx - 26 - cw; x = clamp(x, 6, W - cw - 6);
+    const ch = card.offsetHeight || cw * 1.4;
+    const y = clamp(fy - ch / 2, 6, Math.max(6, H - ch - 6));
+    card.style.left = `${x}px`; card.style.top = `${y}px`;
+    stop.cx = right ? x : x + cw; stop.cy = clamp(fy, y + 14, y + ch - 14);
+  }
+  function showStop() {
+    if (mode !== 'tour') return;
+    const gm = order[tourI % order.length], p = gm.p;
+    stop = gm;
+    const s = narrow ? 1.5 : 1.75;
+    gm.side = gm.hx < W / 2 ? 'right' : 'left';
+    const fx = W * (gm.side === 'right' ? (narrow ? 0.24 : 0.3) : (narrow ? 0.76 : 0.7)), fy = H * 0.5;
+    tweenView({ s, tx: fx - gm.hx * s, ty: fy - gm.hy * s }, MOVE);
+    targets();
+    card.classList.remove('on'); card.hidden = false;
+    card.style.setProperty('--dwell', `${DWELL}ms`);
+    card.innerHTML = `<span class="tour-img"><img src="${pic(p.g)}" alt=""></span>` +
+      `<span class="tour-txt"><span class="tour-k">◆ New candy ${tourI % order.length + 1} of ${order.length}</span><b>${esc(p.n)}</b>` +
+      `<span class="tour-p">${esc(p.pitch)}</span><span class="tour-m">${nb(`${x2(p.nov)} ${narrow ? 'typical gap' : 'the typical gap'}`)} · ${nb(tierWord(p.tier))}</span></span><span class="tour-bar"><i></i></span>`;
+    const nxt = order[(tourI + 1) % order.length]; if (nxt) { const im = new Image(); im.src = pic(nxt.p.g); }
+    clearTimeout(tourTimer); clearTimeout(tourTimer2); clearTimeout(tourTimer3);
+    tourTimer = setTimeout(() => { if (mode !== 'tour') return; placeCard(); card.classList.add('on'); wake(); }, MOVE * 0.7);
+    tourTimer2 = setTimeout(() => { if (mode !== 'tour') return; card.classList.remove('on'); tourI++; tourTimer3 = setTimeout(showStop, 320); }, MOVE * 0.7 + DWELL);
+  }
+  function startTour() {
+    if (reduceMotion || !autoplay || mode === 'tour' || !introAt) return;
+    if (!visible) { resumeOnShow = true; return; }
+    mode = 'tour'; hover = null; hoverFam = 0; pinFam = 0; syncLegend(); setState();
+    tip.style.opacity = '0'; hint.textContent = HINT_TOUR;
+    showStop();
+  }
+  function stopTour() {
+    if (mode !== 'tour') return;
+    mode = 'play'; clearTimeout(tourTimer); clearTimeout(tourTimer2); clearTimeout(tourTimer3); stop = null; setState();
+    card.classList.remove('on'); setTimeout(() => { if (mode === 'play') card.hidden = true; }, 360);
+    hint.textContent = HINT;
+    tweenView({ s: 1, tx: 0, ty: 0 }, 650); targets();
+  }
+  function interacted() {
+    interactedOnce = true; resumeOnShow = false; clearTimeout(resumeTimer); stopTour();
+    clearTimeout(idleTimer); if (autoplay) idleTimer = setTimeout(startTour, IDLE);
+  }
+  btn.addEventListener('click', () => {
+    autoplay = !autoplay; resumeOnShow = false;
+    [idleTimer, firstTimer, resumeTimer].forEach(clearTimeout);
+    if (autoplay) startTour(); else stopTour();
+    syncBtn();
+  });
+
+  /* ---- drawing ---- */
+  function physics() {
+    let e = 0;
+    for (const d of dots) {
+      const ax = (d.hx - d.x) * 0.036, ay = (d.hy - d.y) * 0.036;
+      d.vx = (d.vx + ax) * 0.83; d.vy = (d.vy + ay) * 0.83; d.x += d.vx; d.y += d.vy;
+      e += Math.abs(d.vx) + Math.abs(d.vy);
+    }
+    return e;
+  }
+  function draw(now) {
+    const t = introAt ? (now - t0) / 1000 : 0, show = reduceMotion ? 1 : clamp((t - 0.8) / 0.6);
+    const zs = 1 + (view.s - 1) * 0.45, eff = hoverFam || pinFam;
+    ctx.clearRect(0, 0, W, H);
+    if (show > 0) {
+      ctx.save(); ctx.setLineDash([3.5, 3]); ctx.lineWidth = 1.5;
+      const ha = show * (mode === 'tour' ? 0.55 : 1);
+      for (const o of holes) {
+        ctx.beginPath(); ctx.arc(SX(o.hx), SY(o.hy), o.r * view.s * (0.6 + 0.4 * easeOut(show)), 0, Math.PI * 2);
+        ctx.fillStyle = rgba(T.sugar, 0.85 * ha); ctx.fill(); ctx.strokeStyle = rgba(T.ink, 0.9 * ha); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    const r = R * zs;
+    for (const d of dots) {
+      if (d.a < 0.02) continue;
+      ctx.beginPath(); ctx.arc(SX(d.x), SY(d.y), r, 0, Math.PI * 2);
+      ctx.fillStyle = rgba(FAM.get(d.p.f).rgb, d.a); ctx.fill();
+      ctx.lineWidth = 0.9; ctx.strokeStyle = rgba(T.sheet, Math.min(1, d.a)); ctx.stroke();
+    }
+    if (labelA > 0.02 && show > 0) {
+      ctx.save(); ctx.font = `600 12.5px ${FONT}`; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4;
+      for (const l of labels) {
+        ctx.globalAlpha = labelA * show * (eff ? (l.f === eff ? 1 : 0.18) : 0.95);
+        ctx.strokeStyle = rgba(T.sheet, 0.92); ctx.strokeText(l.text, SX(l.x), SY(l.y));
+        ctx.fillStyle = rgba(T.ink); ctx.fillText(l.text, SX(l.x), SY(l.y));
+      }
+      ctx.restore();
+    }
+    const z = R * 1.8 * zs;
+    gems.forEach((gm, i) => {
+      const k = reduceMotion ? 1 : clamp((t - 1.15 - i * 0.025) / 0.45); if (k <= 0) return;
+      const x = SX(gm.hx), y = SY(gm.hy) - (1 - easeOut(k)) * 24;
+      ctx.globalAlpha = k * gm.a; diamond(x, y, z);
+      if (gm.p.tier === 'A') { ctx.fillStyle = rgba(T.ink); ctx.fill(); ctx.lineWidth = 1.3; ctx.strokeStyle = rgba(T.sheet); ctx.stroke(); }
+      else { ctx.fillStyle = rgba(T.sheet); ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = rgba(T.ink); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+    });
+    if (mode === 'tour' && stop) {
+      const x = SX(stop.hx), y = SY(stop.hy), pulse = 0.5 + 0.5 * Math.sin(now / 260);
+      ctx.beginPath(); ctx.arc(x, y, z + 6 + pulse * 4, 0, Math.PI * 2); ctx.lineWidth = 2; ctx.strokeStyle = rgba(T.pop, 0.55 + 0.45 * pulse); ctx.stroke();
+      if (card.classList.contains('on') && stop.cx != null) {
+        ctx.beginPath(); ctx.moveTo(x + (stop.side === 'right' ? z + 4 : -z - 4), y); ctx.lineTo(stop.cx, stop.cy);
+        ctx.lineWidth = 1.5; ctx.strokeStyle = rgba(T.ink); ctx.stroke();
+        ctx.beginPath(); ctx.arc(stop.cx, stop.cy, 3, 0, Math.PI * 2); ctx.fillStyle = rgba(T.ink); ctx.fill();
+      }
+    }
+    if (hover && mode === 'play') {
+      const x = hover.kind === 'dot' ? SX(hover.o.x) : SX(hover.o.hx), y = hover.kind === 'dot' ? SY(hover.o.y) : SY(hover.o.hy);
+      const rr = hover.kind === 'gem' ? z + 5 : hover.kind === 'hole' ? hover.o.r * view.s + 3 : r + 4;
+      ctx.beginPath(); ctx.arc(x, y, rr, 0, Math.PI * 2); ctx.lineWidth = 2; ctx.strokeStyle = rgba(T.ink); ctx.stroke();
+    }
+  }
+  function loop(now) {
+    raf = 0;
+    let busy = false;
+    if (!introDone && introAt) { const e = physics(); if (e < 0.4 && (now - t0) > 1800) { introDone = true; dots.forEach(d => { d.x = d.hx; d.y = d.hy; }); setState(); } else busy = true; }
+    for (const d of dots) { const dd = d.at - d.a; if (Math.abs(dd) > 0.01) { d.a += dd * 0.2; busy = true; } else d.a = d.at; }
+    for (const g of gems) { const dd = g.at - g.a; if (Math.abs(dd) > 0.01) { g.a += dd * 0.2; busy = true; } else g.a = g.at; }
+    { const dd = labelAt - labelA; if (Math.abs(dd) > 0.01) { labelA += dd * 0.2; busy = true; } else labelA = labelAt; }
+    if (vTo) {
+      const k = easeIO(clamp((now - vT0) / vDur));
+      view.s = lerp(vFrom.s, vTo.s, k); view.tx = lerp(vFrom.tx, vTo.tx, k); view.ty = lerp(vFrom.ty, vTo.ty, k);
+      if (k >= 1) vTo = null; else busy = true;
+      if (mode === 'tour') placeCard();
+    }
+    if (mode === 'tour' || (!reduceMotion && introAt && now - t0 < 2400)) busy = true;   // pulse ring; diamonds dropping in
+    draw(now);
+    if (busy && visible) raf = requestAnimationFrame(loop);
+  }
+  function wake() { if (!raf && W) raf = requestAnimationFrame(loop); }
+
+  /* ---- interaction ---- */
+  function pick(px, py, touch) {
+    const lim = touch ? 22 : 14;
+    let best = null, bd = lim * lim;
+    for (const g of gems) { const d = ((SX(g.hx) - px) ** 2 + (SY(g.hy) - py) ** 2) * 0.55; if (d < bd) { bd = d; best = { kind: 'gem', o: g }; } }
+    for (const d0 of dots) { if (d0.a < 0.3) continue; const d = (SX(d0.x) - px) ** 2 + (SY(d0.y) - py) ** 2; if (d < bd) { bd = d; best = { kind: 'dot', o: d0 }; } }
+    if (!best) for (const o of holes) { if (Math.hypot(SX(o.hx) - px, SY(o.hy) - py) < o.r * view.s) { best = { kind: 'hole', o }; break; } }
+    return best;
+  }
+  function showTip(h) {
+    hover = h;
+    if (!h) { tip.style.opacity = '0'; tip.classList.remove('rich'); if (!pinFam) hoverFam = 0; targets(); return; }
+    if (h.kind === 'dot') {
+      const p = h.o.p, fam = FAM.get(p.f);
+      hoverFam = p.f; tip.classList.remove('rich');
+      tip.innerHTML = `<b>${esc(p.n)}</b><span class="fl"><i style="background:${fam.ink}"></i>${esc(fam.name)}</span>` +
+        `<span>Nearest twin: ${esc(p.nb)}, ${x2(p.d)} the typical gap</span>`;
+    } else if (h.kind === 'gem') {
+      const p = h.o.p;
+      hoverFam = 0; tip.classList.add('rich');
+      tip.innerHTML = `<span class="ti"><img src="${pic(p.g)}" alt=""></span><span><b>${esc(p.n)} ◆</b><span>${esc(p.pitch)}</span>` +
+        `<span>${x2(p.nov)} the typical gap · ${tierWord(p.tier)}</span></span>`;
+    } else {
+      hoverFam = 0; tip.classList.remove('rich');
+      tip.innerHTML = `<b>Empty spot</b><span>It looked empty on this picture and stayed empty across all ${D.dims} attributes. The candies around it have little in common, so no new candy was aimed here.</span>`;
+    }
+    targets();
+    const x = h.kind === 'dot' ? SX(h.o.x) : SX(h.o.hx), y = h.kind === 'dot' ? SY(h.o.y) : SY(h.o.hy);
+    placeTip(x, y);
+  }
+  const local = e => { const b = cv.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+  cv.addEventListener('pointerdown', e => { lastType = e.pointerType; });
+  cv.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    interacted();
+    const [x, y] = local(e), h = pick(x, y, false);
+    cv.style.cursor = h && (h.kind === 'gem' || h.kind === 'dot') ? 'pointer' : 'default';
+    if (!h && !hover) return;
+    if (h && hover && h.o === hover.o) return;
+    showTip(h);
+  });
+  cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') showTip(null); });
+  cv.addEventListener('click', e => {
+    interacted();
+    const touch = lastType !== 'mouse', [x, y] = local(e), h = pick(x, y, touch);
+    if (h && h.kind === 'dot' && !touch) { pinFam = pinFam === h.o.p.f ? 0 : h.o.p.f; syncLegend(); }
+    showTip(h || null);
+  });
+  legend.addEventListener('pointerover', e => { const b = e.target.closest('.fam'); if (!b || e.pointerType !== 'mouse') return; interacted(); hoverFam = +b.dataset.f; targets(); });
+  legend.addEventListener('pointerleave', () => { hoverFam = 0; targets(); });
+  legend.addEventListener('click', e => {
+    const b = e.target.closest('.fam'); if (!b) return; interacted();
+    const f = +b.dataset.f; pinFam = pinFam === f ? 0 : f; hoverFam = 0; syncLegend(); showTip(null);
+  });
+  legend.addEventListener('focusin', interacted);
+
+  new IntersectionObserver(es => {
+    const e = es[es.length - 1], was = visible, wasSeen = seen;
+    visible = e.isIntersecting; seen = visible && e.intersectionRatio >= 0.25;
+    if (!visible && mode === 'tour') { stopTour(); resumeOnShow = true; }
+    if (visible && !was) wake();
+    if (seen && !wasSeen) {
+      if (!introAt) begin();
+      else if (resumeOnShow) { resumeOnShow = false; clearTimeout(resumeTimer); resumeTimer = setTimeout(startTour, 1200); }
+    }
+  }, { threshold: [0, 0.25] }).observe(box);
+  let lastW = 0;
+  new ResizeObserver(() => {
+    const w = box.clientWidth; if (Math.abs(w - lastW) < 2) return; lastW = w;
+    const wasTour = mode === 'tour';
+    if (wasTour) { mode = 'play'; [tourTimer, tourTimer2, tourTimer3].forEach(clearTimeout); card.classList.remove('on'); card.hidden = true; stop = null; Object.assign(view, { s: 1, tx: 0, ty: 0 }); vTo = null; hint.textContent = HINT; setState(); }
+    if (!layout()) return;
+    targets(); draw(performance.now());
+    if (!introAt) begin(); else if (wasTour) startTour();
+  }).observe(box);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (W) { layoutLabels(); wake(); } });
 })();
 </script>
 </body>

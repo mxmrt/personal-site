@@ -86,16 +86,59 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 .slot .sa::after{content:"\2197";font:500 14px var(--fm);color:var(--acc);text-decoration:none}
 .slot .sa:hover{color:var(--hov)}
 /* Sweet Spots wears its own project's wrapper: strawberry with grain, print crop marks, the ring-and-diamond wordmark
-   (Archivo, drawn as outlines) and a thumbnail of the real candy map. Fixed colours on purpose: it looks the same on every ride. */
-.slot.ss{grid-column:1/-1;position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);grid-template-areas:"sl map" "mark map" "sd map";grid-template-rows:auto auto 1fr;align-items:start;gap:14px 26px;padding:28px 24px 24px;border:0;border-radius:0;color:#1b1317;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .03  0 0 0 0 .07  0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E") repeat,#ff5a8f}
+   (Archivo, drawn as outlines) and the project's live map with its tour of the new candies (src/lab/sweet-spots-map.js).
+   Fixed colours on purpose: it looks the same on every ride. */
+.slot.ss{grid-column:1/-1;position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"sl sl" "mark sd" "map map";align-items:start;gap:14px 24px;padding:28px 24px 24px;border:0;border-radius:0;color:#1b1317;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .03  0 0 0 0 .07  0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E") repeat,#ff5a8f}
 .ss .sl{grid-area:sl;color:#1b1317}
 .ss h3{grid-area:mark;line-height:0}
 .ss-mark{display:block;width:100%;max-width:300px;height:auto;overflow:visible}
 .ss .sd{grid-area:sd;margin:0;font-size:15.5px;color:#1b1317}
-.ss-sheet{grid-area:map;align-self:stretch;display:grid;align-content:center;gap:8px;padding:10px 12px;background:#fff}
-.ss-cap{margin:0;font:600 12.5px/1.3 var(--fb);color:#1b1317}
-.ss-map{display:block;width:100%;height:auto}
-.ss-key{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0;padding-top:7px;border-top:1px solid rgba(27,19,23,.12);font:500 12px/1.3 var(--fb);color:#54464c}
+.ss-sheet{grid-area:map;display:grid;gap:8px;min-width:0;margin-top:8px;padding:12px 14px 10px;background:#fff;color:#1b1317}
+.ss-sheet :focus-visible{outline-color:#1b1317}
+.ss-head{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"cap btn" "hint hint";align-items:center;gap:2px 12px}
+.ss-cap{grid-area:cap;margin:0;font:600 13px/1.3 var(--fb);color:#1b1317}
+.ss-hint{grid-area:hint;margin:0;min-height:1.35em;font:400 12.5px/1.35 var(--fb);color:#54464c}
+.ss-tb{grid-area:btn;display:inline-flex;align-items:center;gap:8px;min-height:44px;margin:-12px -8px -12px 0;padding:0 8px;border:0;background:none;color:#1b1317;font:500 11px/1 var(--fm);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.ss-tb::before{content:"";box-sizing:border-box;width:9px;height:10px;border-inline:3px solid currentColor}
+.ss-tb[data-on="0"]::before{width:0;border-width:5px 0 5px 9px;border-style:solid;border-color:transparent currentColor}
+.ss-tb:hover{text-decoration:underline;text-underline-offset:4px}
+.ss-tb[hidden],.ss .tour[hidden],.ss-hint:empty,.ss-legend:empty{display:none}
+.ss-box{position:relative;aspect-ratio:1.5}
+.ss-box .ss-map,#ssCanvas{position:absolute;inset:0;width:100%;height:100%}
+#ssCanvas{touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+.ss-tip{position:absolute;left:0;top:0;z-index:5;max-width:250px;padding:9px 11px;border:1.5px solid #1b1317;background:#fff;color:#1b1317;font:400 13px/1.35 var(--fb);opacity:0;transition:opacity .12s;pointer-events:none}
+.ss-tip b{display:block;font-weight:600}
+.ss-tip span{display:block;color:#54464c}
+.ss-tip.rich{display:grid;grid-template-columns:68px minmax(0,1fr);gap:10px;max-width:300px;align-items:start}
+.ss-tip .ti{width:68px;height:68px;overflow:hidden;background:#f3ede6}
+.ss-tip .ti img{display:block;width:100%;height:100%;object-fit:cover}
+.ss-tip .fl{display:flex;align-items:center;gap:6px}
+.ss-tip .fl i{flex:none;width:9px;height:9px;border-radius:50%}
+.ss .tour{position:absolute;z-index:4;width:var(--cw,240px);display:grid;background:#fff;color:#1b1317;box-shadow:0 0 0 1.5px #1b1317,6px 6px 0 #ff4f86;opacity:0;transform:translateY(8px) scale(.97);transition:opacity .35s ease,transform .45s cubic-bezier(.2,.9,.25,1.2);pointer-events:none}
+.ss .tour.on{opacity:1;transform:none}
+.ss .tour-img{display:block;aspect-ratio:1;overflow:hidden;background:#f3ede6}
+.ss .tour-img img{display:block;width:100%;height:100%;object-fit:cover}
+.ss .tour-txt{display:grid;gap:3px;padding:10px 12px 11px}
+.ss .tour-k{font:500 10.5px/1.3 var(--fm);letter-spacing:.08em;text-transform:uppercase;color:#c8174f}
+.ss .tour-txt b{font:600 16px/1.15 var(--fb)}
+.ss .tour-p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:400 12.5px/1.35 var(--fb);color:#54464c}
+.ss .tour-m{font:500 12px/1.3 var(--fb)}
+.ss .tour-bar{display:block;height:3px;background:rgba(27,19,23,.12)}
+.ss .tour-bar i{display:block;width:0;height:100%;background:#ff4f86}
+.ss .tour.on .tour-bar i{animation:ss-bar var(--dwell,3.8s) linear forwards}
+@keyframes ss-bar{to{width:100%}}
+.ss-box.narrow .tour{box-shadow:0 0 0 1.5px #1b1317,4px 4px 0 #ff4f86}
+.ss-box.narrow .tour-p{display:none}
+.ss-box.narrow .tour-txt{gap:2px;padding:7px 9px 9px}
+.ss-box.narrow .tour-txt b{font-size:14px}
+.ss-box.narrow .tour-k{font:600 9.5px/1.25 var(--fb);letter-spacing:.03em}
+.ss-box.narrow .tour-m{font-size:11px}
+.ss-legend{display:flex;flex-wrap:wrap;gap:0 14px;padding-top:2px;border-top:1px solid rgba(27,19,23,.12)}
+.ss .fam{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0;text-align:left;white-space:nowrap;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:#1b1317;font:500 12.5px/1.2 var(--fb);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.ss .fam i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--sw)}
+.ss .fam b{font-weight:400;color:#54464c;font-variant-numeric:tabular-nums}
+.ss .fam[aria-pressed="true"]{border-bottom-color:#1b1317}
+.ss-key{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0;font:500 12px/1.3 var(--fb);color:#54464c}
 .ss-key span{display:inline-flex;align-items:center;gap:6px}
 .ss-key i{flex:none;width:9px;height:9px;border-radius:50%;background:#1b1317}
 .ss-key .kr{box-sizing:border-box;width:11px;height:11px;background:none;border:1.5px dashed #1b1317}
@@ -103,7 +146,9 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 .ss .crop{position:absolute;width:16px;height:16px;border:0 solid #1b1317;opacity:.6;pointer-events:none}
 .ss .c1{top:7px;left:7px;border-top-width:1.5px;border-left-width:1.5px}.ss .c2{top:7px;right:7px;border-top-width:1.5px;border-right-width:1.5px}
 .ss .c3{bottom:7px;left:7px;border-bottom-width:1.5px;border-left-width:1.5px}.ss .c4{bottom:7px;right:7px;border-bottom-width:1.5px;border-right-width:1.5px}
-@media (max-width:640px){.slot.ss{grid-template-columns:1fr;grid-template-areas:"sl" "mark" "map" "sd";grid-template-rows:auto;padding:24px 18px 20px}}
+@media (max-width:560px){.slot.ss{grid-template-columns:1fr;grid-template-areas:"sl" "mark" "sd" "map";padding:24px 18px 20px}.ss-box{aspect-ratio:1.02}.ss-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}.ss .fam{white-space:normal}.ss .fam b{display:none}}
+@media (pointer:coarse){.ss .fam{min-height:44px}}
+@media (prefers-reduced-motion:reduce){.ss .tour{transition:none}}
 /* Offbook Chess shows its first piece, the Archer: the photo fills the card's right side and fades into the card */
 .slot.oc{display:grid;grid-template-columns:minmax(0,1fr) clamp(120px,36%,200px);gap:0;min-height:200px;padding:0;overflow:hidden}
 .oc-t{display:flex;flex-direction:column;justify-content:space-between;gap:24px;min-width:0;padding:14px 0 16px 16px}
@@ -186,7 +231,12 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 <span class="sl">In progress</span>
 <h3><!--include:lab/sweet-spots-wordmark.svg--></h3>
 <p class="sd">We mapped 404 real candies, had Claude and OpenAI’s Codex find the empty space between them, and designed new candies to fill it. Candy is the rehearsal for insurance filings.</p>
-<div class="ss-sheet" aria-hidden="true"><p class="ss-cap">Claude’s map of the 404 real candies</p><!--include:lab/sweet-spots-map.svg--><p class="ss-key"><span><i></i>Real candy</span><span><i class="kr"></i>Empty spot</span><span><i class="kd"></i>New candy</span></p></div>
+<div class="ss-sheet">
+<div class="ss-head"><p class="ss-cap">Claude’s map of the 404 real candies</p><p class="ss-hint" id="ssHint"></p><button class="ss-tb" id="ssTour" type="button" hidden>Pause tour</button></div>
+<div class="ss-box" id="ssBox"><!--include:lab/sweet-spots-map.svg--><canvas id="ssCanvas" role="img" aria-label="Claude’s map of the 404 real candies, colored by family, with dashed rings on the 11 spots that stayed empty and diamonds for the 30 new candies"></canvas><div class="ss-tip" id="ssTip" role="status"></div></div>
+<div class="ss-legend" id="ssLegend" role="group" aria-label="Candy families"></div>
+<p class="ss-key"><span><i></i>Real candy</span><span><i class="kr"></i>Empty spot</span><span><i class="kd"></i>New candy</span></p>
+</div>
 </li>
 <li class="slot oc"><div class="oc-t"><span class="sl">Coming soon</span><h3>Offbook Chess</h3></div><img class="oc-pic" src="lab/offbook-archer-360.webp" srcset="lab/offbook-archer-360.webp 360w, lab/offbook-archer-720.webp 720w" sizes="230px" width="720" height="720" loading="lazy" decoding="async" alt="The Archer, an Offbook Chess piece: an ivory braided column with a bow and an arrow pointing up, on a bell-shaped base"></li>
 <li class="slot"><span class="sl">Coming soon</span><div><h3>Game Theory Monograph</h3><p class="sd">A CAS monograph on game theory and its applications in insurance, led by Agni Chatterjee with Betty Zhu and me.</p><a class="sa" href="https://www.casact.org/article/new-cas-monographs-explore-strategy-competition-and-extreme-risk" rel="noopener">Read the CAS announcement</a></div></li>
@@ -207,3 +257,7 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 </footer>
 <!--ENGINES-->
 <!--RUNTIME-->
+<script type="application/json" id="ss-data"><!--include:lab/sweet-spots-data.json--></script>
+<script>
+<!--include:lab/sweet-spots-map.js-->
+</script>

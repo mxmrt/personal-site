@@ -1,12 +1,13 @@
 // site.test.mjs: behaviour tests in headless Chromium against public/, served the way Cloudflare Pages serves it.
-// usage: node tests/site.test.mjs [--ride=ID] [--quick]      (--quick: desktop only, skips the 24-load pick test)
+// usage: node tests/site.test.mjs [--ride=ID] [--quick] [--lab]
+//   --ride=ID: one ride only   --quick: desktop only, skips the 24-load pick test   --lab: only the Lab map tests
 // needs: npm install && npx playwright install chromium      (CHROMIUM_PATH=... to use another Chromium binary)
 import path from 'node:path';
 import { ROOT, RIDES, launch, routeRequests, sleep } from '../tools/browser.mjs';
 import { startSiteServer } from '../tools/serve.mjs';
 
 const opt = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
-const ONLY = opt.ride ? [opt.ride] : RIDES;
+const ONLY = opt.lab ? [] : opt.ride ? [opt.ride] : RIDES;
 const VIEWPORTS = [
   { name: 'desktop', viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 },
   { name: 'phone', viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
@@ -119,7 +120,7 @@ for (const vp of VIEWPORTS) for (const id of ONLY) {
   });
 }
 
-await test('reduced motion: every ride shows a still, no loop, no controls', async () => {
+if (ONLY.length) await test('reduced motion: every ride shows a still, no loop, no controls', async () => {
   for (const id of ONLY) {
     const { ctx, page, bad } = await open(VIEWPORTS[0], { reducedMotion: 'reduce', hash: '#' + id });
     try {
@@ -132,7 +133,76 @@ await test('reduced motion: every ride shows a still, no loop, no controls', asy
   }
 });
 
-if (!opt.quick && !opt.ride) await test('random pick: 24 visits, never the same ride twice in a row, every ride shows up', async () => {
+/* the Lab's live Sweet Spots map (src/lab/sweet-spots-map.js): its own loop, tour and Pause tour button */
+const labState = (page) => page.evaluate(() => {
+  const box = document.getElementById('ssBox'), card = document.querySelector('.ss .tour'), btn = document.getElementById('ssTour');
+  const b = box.getBoundingClientRect(), c = card && !card.hidden ? card.getBoundingClientRect() : null;
+  return {
+    state: box.dataset.state, on: !!(card && card.classList.contains('on')), btn: btn.hidden ? null : btn.textContent,
+    hint: document.getElementById('ssHint').textContent, legend: document.querySelectorAll('#ssLegend .fam').length,
+    fallback: !!box.querySelector('.ss-map'), inside: !c || (c.left >= b.left - 1 && c.right <= b.right + 1 && c.top >= b.top - 1 && c.bottom <= b.bottom + 1),
+  };
+});
+const toLab = (page) => page.evaluate(() => document.getElementById('ssBox').scrollIntoView({ block: 'center', behavior: 'instant' }));
+const tourShows = (page, ms, why) => page.waitForFunction(() => document.querySelector('.ss .tour.on'), null, { timeout: ms, polling: 100 }).catch(() => { throw new Error(why); });
+
+if (!opt.ride) for (const vp of VIEWPORTS) await test(`Lab map on ${vp.name}: flies in when seen, tours the new candies, pauses, sleeps off-screen`, async () => {
+  const { ctx, page, bad } = await open(vp, { hash: '#asymptote' });
+  try {
+    await page.click('#pz'); await page.mouse.move(1, 1);   // pause the hero, so every frame counted below is the map's
+    let s = await labState(page);
+    expect(s.state === 'waiting' && s.legend === 8 && !s.fallback && s.btn === 'Pause tour', 'before it is seen, the map should wait with its legend and a Pause tour button: ' + JSON.stringify(s));
+    await toLab(page);
+    await tourShows(page, 30000, 'the tour never showed a new candy');
+    await page.waitForFunction(() => { const i = document.querySelector('.ss .tour.on img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 10000 })
+      .catch(() => { throw new Error('the tour card picture did not load'); });
+    s = await labState(page);
+    expect(s.inside, 'the tour card should sit inside the map');
+    expect(/^Touring/.test(s.hint), 'the hint should say the map is touring, got: ' + s.hint);
+    // Pause tour stops the tour, and once the dots have landed the map stops drawing
+    await page.click('#ssTour');
+    s = await labState(page);
+    expect(s.btn === 'Play tour' && s.state !== 'tour', 'Pause tour should stop the tour: ' + JSON.stringify(s));
+    await page.waitForFunction(() => document.getElementById('ssBox').dataset.state === 'play', null, { timeout: 30000 });
+    await sleep(900);   // the view eases back out
+    expect(!(await labState(page)).on, 'the tour card should go away when paused');
+    expect((await rafOver(page, 1000)) <= 1, 'the map keeps drawing with its tour paused');
+    await page.click('#ssTour');
+    expect((await labState(page)).btn === 'Pause tour', 'Play tour should restore the Pause tour label');
+    await tourShows(page, 15000, 'Play tour did not restart the tour');
+    // off-screen the tour stops and the map sleeps; back on screen the tour picks up again
+    await page.evaluate(() => window.scrollTo(0, 0)); await sleep(1000);
+    s = await labState(page);
+    expect(!s.on && s.state !== 'tour', 'the tour should stop when the map leaves the screen');
+    expect((await rafOver(page, 1000)) <= 1, 'the map keeps drawing off-screen');
+    await toLab(page);
+    await tourShows(page, 15000, 'the tour did not resume when the map came back into view');
+    expect(!bad.length, bad.join('\n'));
+  } finally { await ctx.close(); }
+});
+
+if (!opt.ride) await test('Lab map: under reduced motion it is drawn in place with no tour and no loop; without JavaScript the static map shows', async () => {
+  const { ctx, page, bad } = await open(VIEWPORTS[0], { reducedMotion: 'reduce', hash: '#asymptote' });
+  try {
+    await toLab(page); await sleep(1500);
+    const s = await labState(page);
+    expect(s.btn === null && !s.on && s.state === 'play', 'reduced motion should give no tour and no Pause tour button: ' + JSON.stringify(s));
+    const inked = await page.evaluate(() => { const c = document.getElementById('ssCanvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n; });
+    expect(inked > 5000, 'the map should be drawn, got ' + inked + ' inked pixels');
+    expect((await rafOver(page, 1000)) <= 1, 'the map animates under prefers-reduced-motion');
+    expect(!bad.length, bad.join('\n'));
+  } finally { await ctx.close(); }
+  const ctx2 = await browser.newContext({ viewport: VIEWPORTS[0].viewport, javaScriptEnabled: false });
+  try {
+    await routeRequests(ctx2, site.url);
+    const page2 = await ctx2.newPage();
+    await page2.goto(site.url + '/', { waitUntil: 'load' });
+    const box = await page2.locator('#ssBox .ss-map').boundingBox();
+    expect(box && box.width > 300 && box.height > 150, 'without JavaScript the Lab should show the static map');
+  } finally { await ctx2.close(); }
+});
+
+if (!opt.quick && !opt.ride && !opt.lab) await test('random pick: 24 visits, never the same ride twice in a row, every ride shows up', async () => {
   const ctx = await browser.newContext({ viewport: { width: 800, height: 600 }, reducedMotion: 'reduce' });
   await routeRequests(ctx, site.url);
   const page = await ctx.newPage();
@@ -147,7 +217,7 @@ if (!opt.quick && !opt.ride) await test('random pick: 24 visits, never the same 
   expect(RIDES.every((r) => seen.includes(r)), 'not every ride appeared: ' + seen.join(' '));
 });
 
-await test('"Take another ride" reloads into a different ride and drops the #ride hash', async () => {
+if (!opt.lab) await test('"Take another ride" reloads into a different ride and drops the #ride hash', async () => {
   const { ctx, page, bad } = await open(VIEWPORTS[0], { reducedMotion: 'reduce', hash: '#asymptote' });
   try {
     await Promise.all([page.waitForEvent('load'), page.click('#again')]);
@@ -158,7 +228,7 @@ await test('"Take another ride" reloads into a different ride and drops the #rid
   } finally { await ctx.close(); }
 });
 
-await test('keyboard: skip link first, in-page nav moves focus to the section', async () => {
+if (!opt.lab) await test('keyboard: skip link first, in-page nav moves focus to the section', async () => {
   const { ctx, page, bad } = await open(VIEWPORTS[0], { reducedMotion: 'reduce', hash: '#floating-world' });
   try {
     await page.keyboard.press('Tab');
@@ -171,7 +241,7 @@ await test('keyboard: skip link first, in-page nav moves focus to the section', 
   } finally { await ctx.close(); }
 });
 
-await test('"Back to top" returns focus to the top; the skip link shows for keyboard users only', async () => {
+if (!opt.lab) await test('"Back to top" returns focus to the top; the skip link shows for keyboard users only', async () => {
   for (const how of ['mouse', 'keyboard']) {
     const { ctx, page, bad } = await open(VIEWPORTS[0], { reducedMotion: 'reduce', hash: '#scale-invariant' });
     try {
