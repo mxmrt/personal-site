@@ -174,7 +174,7 @@ Still open:
 Last verified on this build (branch `multiverse`):
 
 - `npm run check`: 8/8 checks pass, with all four engines honouring the contract.
-- `npm test`: 15/15 tests pass, using Chromium 141 with SwiftShader and Playwright 1.64. Each embedded world matches its engine run standalone to a mean of 0.02/255.
+- `npm test`: 16/16 tests pass, using Chromium 141 with SwiftShader and Playwright 1.64. Each embedded world matches its engine run standalone to a mean of 0.02/255.
   - Firefox and WebKit have not been run on this build.
   - Codex's launch review ran them on the four-ride build (48/48), before the follow-up fixes and the live Lab map.
 - Flash scans (3×3 grid, worst flashes in any second; WCAG 2.3.1 allows 3):
