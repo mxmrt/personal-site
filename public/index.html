@@ -880,7 +880,12 @@ function fbFor(o, w, h) {
   const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
   gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, d);
+  const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  if ((!t || !d || !f || status !== gl.FRAMEBUFFER_COMPLETE) && !gl.isContextLost()) {
+    gl.deleteTexture(t); gl.deleteRenderbuffer(d); gl.deleteFramebuffer(f);
+    throw new Error('Many Worlds: incomplete framebuffer (' + status + ')');
+  }
   return { t, d, f, w, h };
 }
 function fullTri() { gl.bindBuffer(gl.ARRAY_BUFFER, bTri); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0); gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2); gl.drawArrays(gl.TRIANGLES, 0, 3); }

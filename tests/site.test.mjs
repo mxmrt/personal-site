@@ -24,7 +24,7 @@ const browser = await launch();
 const results = [];
 
 /* every page gets: a rAF counter, an audio tripwire, and error/external-request collectors */
-async function open(vp, { reducedMotion = 'no-preference', hash = '' } = {}) {
+async function open(vp, { reducedMotion = 'no-preference', hash = '', initScript = null } = {}) {
   const ctx = await browser.newContext({ viewport: vp.viewport, deviceScaleFactor: vp.deviceScaleFactor || 1, isMobile: !!vp.isMobile, hasTouch: !!vp.hasTouch, reducedMotion });
   ctx.setDefaultTimeout(60000);
   const bad = [];
@@ -39,6 +39,7 @@ async function open(vp, { reducedMotion = 'no-preference', hash = '' } = {}) {
     const play = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () { window.__audio.push('media.play'); return play.call(this); };
   });
+  if (initScript) await ctx.addInitScript(initScript);
   const page = await ctx.newPage();
   page.on('pageerror', (e) => bad.push('page error: ' + e.message));
   page.on('console', (m) => {
@@ -292,6 +293,32 @@ if (MW) await test('Many Worlds: context restore redraws paused and reduced-moti
       expect(!bad.length, bad.join('\n'));
     } finally { await ctx.close(); }
   }
+});
+
+if (MW) await test('Many Worlds: an incomplete depth target releases its resources and falls back to the poster', async () => {
+  const { ctx, page, bad } = await open(VIEWPORTS[0], { initScript: () => {
+    const p = WebGLRenderingContext.prototype, storage = p.renderbufferStorage;
+    window.__targetResources = {};
+    for (const type of ['Texture', 'Renderbuffer', 'Framebuffer']) {
+      const count = window.__targetResources[type] = { created: 0, deleted: 0 };
+      const create = p['create' + type], remove = p['delete' + type];
+      p['create' + type] = function (...args) { const obj = create.apply(this, args); if (obj) count.created++; return obj; };
+      p['delete' + type] = function (obj) { if (obj) count.deleted++; return remove.call(this, obj); };
+    }
+    // Simulate unavailable depth storage: the attachment is valid but has no backing allocation.
+    p.renderbufferStorage = function (...args) { if (args[1] !== this.DEPTH_COMPONENT16) return storage.apply(this, args); };
+  } });
+  try {
+    await page.waitForSelector('header.hero.still', { timeout: 30000 });
+    expect(!(await page.locator('#gl').evaluate((cv) => cv.classList.contains('on'))), 'an incomplete target must not show a broken WebGL frame');
+    const poster = require('pngjs').PNG.sync.read(await page.locator('#pc').screenshot());
+    expect(spread(poster) > 40, 'allocation failure should leave the visible poster');
+    expect((await heroFramesOver(page, 700)) === 0, 'allocation failure should stop the hero loop');
+    const resources = await page.evaluate(() => window.__targetResources);
+    for (const [type, count] of Object.entries(resources)) expect(count.created > 0 && count.deleted === count.created, `${type}: incomplete target leaked resources: ${JSON.stringify(count)}`);
+    expect(bad.some((m) => m.includes('incomplete framebuffer')), 'allocation failure should report its cause');
+    expect(bad.every((m) => m.includes('incomplete framebuffer')), bad.join('\n'));
+  } finally { await ctx.close(); }
 });
 
 if (MW) await test('Many Worlds: each embedded world draws exactly what its own engine draws standalone', async () => {
