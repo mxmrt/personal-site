@@ -1,8 +1,8 @@
 {
   "name": "maxmartinelli-site",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
-  "description": "maxmartinelli.com: one page whose hero is one of four ride animations, picked at random on each visit. Static files for Cloudflare.",
+  "description": "maxmartinelli.com: one page whose hero is Many Worlds, a WebGL ride through eight worlds in one 48 s loop. Static files for Cloudflare.",
   "scripts": {
     "build": "python3 build.py",
     "check": "python3 tools/check.py",
