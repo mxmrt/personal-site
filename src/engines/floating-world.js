@@ -848,6 +848,8 @@ function poster(c, w, h, t, photo) {
 
 /* ---------- live frames: map the runtime's live fields onto the prototype's ---------- */
 const LV = { lean: 0, kick: 0 };
+/* draws into whatever framebuffer is bound: the screen, or the target Many Worlds binds when it embeds this ride as a
+   world (it gives that target a depth buffer); the 4th argument names it and is otherwise unused here */
 function draw(t, live, photo) {
   if (live) { LV.lean = live.lean; LV.kick = live.intent != null ? live.intent : live.boost; RING = live.wave < 0.85 ? live.wave : -1; } else RING = -1;
   build(t, live ? LV : null, !!photo, cv.width, cv.height);

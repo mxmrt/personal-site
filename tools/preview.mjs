@@ -1,14 +1,16 @@
-// preview.mjs: screenshots and visual checks of each ride, served from public/ like Cloudflare Pages.
+// preview.mjs: screenshots and visual checks of each ride (today one, Many Worlds), served from public/ like Cloudflare Pages.
 //
 // usage: node tools/preview.mjs [--ride=ID] [--out=preview] [--flash] [--hold] [--scans-only] [--quick] [--frames=6] [--wait=2600]
-//   --ride   one ride (default: all four)          --flash  scan 20 s of the hero at normal speed for flashing (slow)
+//   --ride   one ride (default: all in rides.json)  --flash  scan the hero's whole DURATION (Many Worlds: the 48 s loop) at
+//                                                           normal speed for flashing (slow); --secs=N scans the first N s
 //   --quick  skip the stitched full-page images    --hold   scan 20 s of holding to accelerate for flashing (slow): the
 //   --wait   ms of playback before "rest" shots             runtime's ramp to 5x, each ride's warpCap, live boost/intent
 //   --scans-only  skip the screenshots and run only --flash / --hold
 //
 // Writes <out>/<ride>/:
 //   desktop-rest.png, phone-rest.png         what a visitor sees a few seconds after load
-//   desktop-frames.png, phone-frames.png     contact sheet of hero frames via window.seek(t), same t as docs/reference/
+//   desktop-frames.png, phone-frames.png     contact sheet of hero frames via window.seek(t), same t as docs/reference/:
+//                                            the ride's MM_SHOTS (Many Worlds: mid-world, one per world), else --frames spread
 //   desktop-page.png, phone-page.png         the whole page, stitched (not with --quick), with the Lab map's dots
 //                                            landed and its tour paused, so the shots repeat
 //   desktop-reduced.png, phone-reduced.png   prefers-reduced-motion still
@@ -147,12 +149,13 @@ for (const id of IDS) {
       await stitch(shots, vp.viewport.width, f.h, vp.name === 'phone' ? 390 : 720, path.join(dir, `${vp.name}-page.png`));
     }
     if (f.seek && f.dur) {
-      const ts = Array.from({ length: FRAMES }, (_, i) => +(f.dur * (0.04 + 0.92 * i / (FRAMES - 1))).toFixed(2)), shots = [];
+      const listed = await page.evaluate(() => window.MM_SHOTS), shots = [];
+      const ts = Array.isArray(listed) && listed.length ? listed : Array.from({ length: FRAMES }, (_, i) => +(f.dur * (0.04 + 0.92 * i / (FRAMES - 1))).toFixed(2));
       for (const t of ts) {
         await page.evaluate(async (t) => { window.scrollTo({ top: 0, behavior: 'instant' }); await window.seek(t); await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); }, t);
         shots.push(await page.screenshot());
       }
-      await composeGrid(shots, vp.name === 'phone' ? FRAMES : 3, vp.name === 'phone' ? 195 : 480, path.join(dir, `${vp.name}-frames.png`), ts.map((t) => `t=${t}s`));
+      await composeGrid(shots, vp.name === 'phone' ? ts.length : ts.length > 6 ? 4 : 3, vp.name === 'phone' ? 195 : 480, path.join(dir, `${vp.name}-frames.png`), ts.map((t) => `t=${t}s`));
     }
     await ctx.close();
 
@@ -171,7 +174,7 @@ for (const id of IDS) {
     const ctx = await newCtx({ viewport: { width: 720, height: 450 }, deviceScaleFactor: 1 }), page = await ctx.newPage();
     logs(page, 'flash');
     await page.goto(url, { waitUntil: 'load' }); await sleep(WAIT);
-    const dur = Math.min(await page.evaluate(() => window.DURATION), 20), fps = 20, series = [];
+    const dur = Math.min(await page.evaluate(() => window.DURATION), +opts.secs || 1e9), fps = 20, series = [];
     for (let k = 0; k <= dur * fps; k++) {
       await page.evaluate(async (t) => { window.scrollTo({ top: 0, behavior: 'instant' }); await window.seek(t); await new Promise((r) => requestAnimationFrame(r)); }, k / fps);
       series.push(cellLuminance(await page.screenshot({ type: 'png' })));

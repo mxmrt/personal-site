@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build maxmartinelli.com from src/ into public/, the folder Cloudflare serves.
 
-The page is one self-contained index.html: the shell (layout, content, CSS), the four ride engines and the shared
-runtime, all inline. <!--include:path--> in the shell pulls in a file from src/ (the Lab's generated SVGs, scripts
+The page is one self-contained index.html: the shell (layout, content, CSS), the ride (Many Worlds), the engines it
+embeds as worlds (worlds.json), and the shared runtime, all inline. <!--include:path--> in the shell pulls in a file from src/ (the Lab's generated SVGs, scripts
 and data). static/ holds the files copied next to it, folders included (404 page, icons, social image, _headers and
 _redirects, the Lab's pictures).
 The build is deterministic, so `--check` can prove public/ matches src/.
@@ -11,7 +11,8 @@ usage:
   python3 build.py                  rebuild public/ from src/ and static/
   python3 build.py --check          rebuild into a temp folder; exit 1 if public/ is stale
   python3 build.py --artifact OUT   write the claude.ai artifact fragment (no doctype/head/body) to OUT
-  python3 build.py --only ID        dev page with one ride, written to dev/ID.html (never deploy)
+  python3 build.py --only ID        dev page with one engine as the ride, written to dev/ID.html (never deploy); a world
+                                    engine (worlds.json) plays standalone, as the ride it was before Many Worlds embedded it
   python3 build.py --with-test      dev page that also includes the runtime smoke-test ride (never deploy)
   python3 build.py --out PATH       with --only/--with-test: where to write the dev page
 
@@ -21,7 +22,9 @@ import filecmp, html, json, os, re, shutil, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(HERE, 'rides.json'), encoding='utf-8') as _f:
-    RIDES = json.load(_f)   # every ride that ships, in order (the tools read the same file)
+    RIDES = json.load(_f)   # the rides the page can pick (one: Many Worlds); the tools read the same file
+with open(os.path.join(HERE, 'worlds.json'), encoding='utf-8') as _f:
+    WORLDS = json.load(_f)  # engines that ship only as worlds inside Many Worlds (still standalone engines in src/engines/)
 
 # ---- site settings: edit these, then rebuild ----
 SITE_URL = 'https://maxmartinelli.com'   # canonical host (the apex answers; www has no DNS record): canonical, og:url, og:image
@@ -63,15 +66,16 @@ def tree(root):
     return {os.path.relpath(os.path.join(d, n), root).replace(os.sep, '/') for d, _, files in os.walk(root) for n in files}
 
 
-def fragment(ids):
-    """shell + engines + runtime as one fragment (the claude.ai artifact form of the page)."""
+def fragment(ids, worlds=()):
+    """shell + engines + runtime as one fragment (the claude.ai artifact form of the page). ids are the rides the page
+    can pick; worlds are engines that ship alongside them for Many Worlds to embed."""
     shell, runtime = read('src', 'shell.html'), read('src', 'runtime.js')
     shell = re.sub(r'<!--include:([\w./-]+)-->', include, shell)
     for token in ('__RIDES__', '<!--ENGINES-->', '<!--RUNTIME-->'):
         if shell.count(token) != 1:
             sys.exit('src/shell.html must contain %s exactly once' % token)
     parts = ['<script>window.MM_ENGINES = window.MM_ENGINES || {};</script>']
-    for k in ids:
+    for k in list(ids) + [w for w in worlds if w not in ids]:   # the ride first; Many Worlds builds its worlds only when it runs
         src = read('src', 'engines', k + '.js')
         if '</script' in src.lower():
             sys.exit('src/engines/%s.js contains "</script" and would end its inline <script> early' % k)
@@ -127,13 +131,13 @@ def write(path, text):
 
 
 def build_public(out_dir):
-    missing = [k for k in RIDES if not os.path.exists(os.path.join(HERE, 'src', 'engines', k + '.js'))]
+    missing = [k for k in RIDES + WORLDS if not os.path.exists(os.path.join(HERE, 'src', 'engines', k + '.js'))]
     if missing:
         sys.exit('missing engine files: ' + ', '.join(missing))
     if os.path.isdir(out_dir):
         shutil.rmtree(out_dir)
     os.makedirs(out_dir)
-    page = web_page(fragment(RIDES))
+    page = web_page(fragment(RIDES, WORLDS))
     write(os.path.join(out_dir, 'index.html'), page)
     for rel in static_files():
         dst = os.path.join(out_dir, *rel.split('/'))
@@ -177,20 +181,20 @@ def main(argv):
             sys.exit('no engine file src/engines/%s.js' % only)
         if with_test: ids.append('test')
         path = out or os.path.join(HERE, 'dev', (only or 'with-test') + '.html')
-        page = web_page(fragment(ids))
+        page = web_page(fragment(ids, WORLDS if any(i in RIDES for i in ids) else ()))
         write(path, page)
         print('wrote %s (%.1f KB, dev only) rides=%s' % (os.path.relpath(path, HERE), len(page.encode('utf-8')) / 1024, ','.join(ids)))
         return 0
     if artifact:
-        frag = fragment(RIDES)
+        frag = fragment(RIDES, WORLDS)
         write(artifact, frag)
         print('wrote %s (%.1f KB artifact fragment)' % (artifact, len(frag.encode('utf-8')) / 1024))
         return 0
     page = build_public(os.path.join(HERE, 'public'))
     files = static_files()
     top = sorted({f.split('/')[0] + ('/' if '/' in f else '') for f in files})
-    print('wrote public/index.html (%.1f KB) rides=%s, plus %d static files: %s' % (
-        len(page.encode('utf-8')) / 1024, ','.join(RIDES), len(files), ', '.join(top)))
+    print('wrote public/index.html (%.1f KB) rides=%s worlds=%s, plus %d static files: %s' % (
+        len(page.encode('utf-8')) / 1024, ','.join(RIDES), ','.join(WORLDS), len(files), ', '.join(top)))
     return 0
 
 

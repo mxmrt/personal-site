@@ -1,18 +1,24 @@
-/* Many Worlds: one ride engine for the shared maxmartinelli.com shell (see ENGINE_API.md).
+/* Many Worlds: the ride engine for the shared maxmartinelli.com shell (see ENGINE_API.md), and the site's only ride.
    Every path in the forecast ensemble is a world. You ride one light trail, accelerating without end; at the peak of
-   each 6 s cycle the frame tears along a seeded fracture and you punch through into the next world: blue hour, contour,
-   ink, crystal, molten, then blue hour again. The runtime owns the clock, input, hint and fallbacks. */
+   each 6 s cycle the frame tears along a seeded fracture and you punch through into the next world. Five worlds are
+   drawn here (blue hour, contour, ink, crystal, molten). Three are the site's other rides, embedded whole: their own
+   engines draw them into this frame (Scale Invariant's Menger sponge, Floating World's woodblock sea, Asymptote's
+   starbow), and the tears stitch all eight into one 48 s loop. The runtime owns the clock, input, hint and fallbacks. */
 window.MM_ENGINES['many-worlds'] = function (rt) {
 'use strict';
 /* HERO STORYBOARD (seconds; draw(t) renders every frame from t alone; one world per 6 s acceleration cycle)
    0.0-5.88  BLUE HOUR. Red and white ensemble trails fan out over a dark plain under a sodium-lit horizon;
              the ride doubles its speed across the cycle while octave-spaced streak layers keep accelerating.
-   5.88-6.42 RIFT 1. Hit-stop, a seeded fracture glows across the frame, the halves tear apart with
-             slit-scan streaks and the ride punches into CONTOUR: glowing level lines above and below.
-   12.0      RIFT 2 into INK: paper, wet brushstrokes, a sumi-e ridge (the one light world).
-   18.0      RIFT 3 into CRYSTAL: prisms split the white trails into spectra that recombine at the next prism.
-   24-30     MOLTEN heat haze and embers, then RIFT 5 back into BLUE HOUR; the 30 s loop repeats forever.
-             DURATION 24 s covers four worlds and three rifts, with the fourth rift (into MOLTEN) at the end. */
+   5.88-6.42 RIFT 1. Hit-stop, a seeded fracture glows across the frame, the halves tear apart with slit-scan streaks
+             and the ride punches into SCALE INVARIANT: a dive through a Menger sponge, two levels deeper per cycle.
+   12.0      RIFT 2 into CONTOUR: glowing level lines above and below.
+   18.0      RIFT 3 into FLOATING WORLD: a woodblock-print sea, bursting out of one barrel and riding into the next.
+   24.0      RIFT 4 into INK: paper, wet brushstrokes, a sumi-e ridge (the one light world).
+   30.0      RIFT 5 into ASYMPTOTE: the starbow, crossing one more nine of the speed of light.
+   36.0      RIFT 6 into CRYSTAL: prisms split the white trails into spectra that recombine at the next prism.
+   42-48     MOLTEN heat haze and embers, then RIFT 8 back into BLUE HOUR; the 48 s loop repeats forever.
+   An embedded world plays 6 s of its own ride's timeline, from 6 s in, and is drawn by that ride's engine. DURATION,
+   the span the tools preview and scan, is the whole loop. */
 
 const { W, D, TAU, clamp, sat, sstep, mulberry32, hash, REDUCED, PHONE } = rt;
 const LN2 = Math.LN2;
@@ -25,7 +31,7 @@ const rnd = mulberry32(20261011);
 /* ---------- endless acceleration: cycle phase, speed v(t) and its closed-form integral s(t) ----------
    Inside each 6 s cycle the ride speeds up by one octave (v = V0 * 2^phase). The wrap is hidden by the rift,
    which also adds a forward punch. Distance stays continuous across every wrap. */
-const TC = 6, DURATION = 24, HS_T = 0.12, OPEN_T = 0.42;
+const TC = 6, HS_T = 0.12, OPEN_T = 0.42;
 const cyc = (t) => Math.floor(t / TC);
 const V0 = 70, DC = (V0 * TC) / LN2, VP = 62, TP = 0.17, PF = VP * Math.E * TP;
 const punch = (u) => (u > 0 ? (u / TP) * Math.exp(1 - u / TP) : 0);
@@ -44,9 +50,30 @@ const WD = {
   crystal:  { mode: 2, lit: 0, md: 0, mem: [0.72, 0.78, 1], wtr: [1, 1, 1], hot: [1, 0.2, 0.3], head: [0.95, 0.95, 1], strk: [0.8, 0.84, 1], alt: [0.8, 0.7, 1], glow: [0.82, 0.78, 1], wM: 0.15, aM: 0.42 },
   molten:   { mode: 3, lit: 0, md: 0, mem: [1, 0.4, 0.07], hot: [1, 0.16, 0.05], head: [1, 0.88, 0.6], wtr: [1, 0.86, 0.55], strk: [1, 0.5, 0.12], alt: [1, 0.72, 0.28], glow: [1, 0.6, 0.22], wM: 0.22, aM: 0.45 },
 };
-const ORDER = ['night', 'contour', 'ink', 'crystal', 'molten'], NW = ORDER.length;
+/* the three embedded worlds: another ride's engine draws each one (see "embedded worlds" below). Each plays the 6 s
+   window of its own timeline that starts at `from` and keeps its ride's hold-to-accelerate cap; fb is the native world
+   that stands in if its engine is missing or fails; glow: the fracture's glow-in colour as you tear into it */
+const XW = {
+  'scale-invariant': { ext: 1, from: 6, lit: 0, md: 0, glow: [1, 0.55, 0.26], fb: 'crystal' },
+  'floating-world': { ext: 1, from: 6, lit: 0, md: 0, glow: [0.96, 0.9, 0.76], fb: 'night' },
+  asymptote: { ext: 1, from: 6, lit: 0, md: 0, glow: [0.58, 0.76, 1], fb: 'contour' },
+};
+Object.assign(WD, XW);
+/* hero colours per world (the runtime's heroInk keys; none = the site theme). Ink flips the name to ink on paper; the
+   embedded worlds keep the accents and scrims their rides wore as standalone rides */
+WD.ink.ui = { hf: 'rgb(14,18,30)', hs: '242,238,228', hb: 'rgba(14,18,30,0.36)', ha: '#9C4508', hfoc: '#9C4508', hh: '#9C4508' };
+WD['scale-invariant'].ui = { hh: '#FFD39A', st: '0.5' };
+WD['floating-world'].ui = { hf: '#F2EBDD', hs: '11,29,53', hb: 'rgba(242,235,221,0.3)', ha: '#E3CFA8', hfoc: '#E3CFA8', hh: '#E3CFA8', st: '0' };
+WD.asymptote.ui = { ha: '#6FA8FF', hh: '#CFE0FF', st: '0', sb: '0.7' };
+const ORDER = ['night', 'scale-invariant', 'contour', 'floating-world', 'ink', 'asymptote', 'crystal', 'molten'], NW = ORDER.length;
 ORDER.forEach((k) => { WD[k].id = k; });
-const worldAt = (c) => WD[ORDER[((c % NW) + NW) % NW]];
+const DURATION = NW * TC; // the whole loop
+const SHOTS = ORDER.map((_, i) => i * TC + 3); // mid-world times the tools photograph
+/* the loop as the tools see it: each world's id, when its slot starts, and (embedded worlds) the ride time it starts at */
+const WORLDS = ORDER.map((id, i) => ({ id, at: i * TC, from: WD[id].ext ? WD[id].from : null }));
+const worldOf = (c) => WD[ORDER[((c % NW) + NW) % NW]];
+/* a world named in the URL (#asymptote, #ink, ...) starts the ride just past the tear into it */
+const START = (() => { let h = ''; try { h = decodeURIComponent((W.location.hash || '').slice(1)); } catch (e) { /* malformed hash */ } const i = ORDER.indexOf(h); return i > 0 ? i * TC + OPEN_T + 0.2 : 0; })();
 
 /* ---------- the flight path: a seeded closed-form curve P(s) = (X(s), Y(s), s) that nothing draws ---------- */
 const TXc = [], TYc = [];
@@ -338,7 +365,8 @@ function boostLines(tl, bl, Wd) {
 let CUR = WD.night, SC = 0, SSTART = 0, CC = 0;
 function build(t, live, photo, pw_, ph_) {
   PXW = pw_; PXH = ph_;
-  const c = cyc(t), Wd = worldAt(c), u = t - c * TC, ph = u / TC, pk = c > 0 ? punch(u) : 0, bl = live ? live.b : 0;
+  const c = cyc(t), u = t - c * TC, ph = u / TC, pk = c > 0 ? punch(u) : 0, bl = live ? live.b : 0;
+  let Wd = worldAt(c); if (Wd.ext) Wd = WD[Wd.fb]; // embedded worlds draw themselves (xDraw); never built here
   const sc = sAt(t), v = speed(t);
   sAnchor = sc - SIG_D;
   sampleTrack(sc);
@@ -357,6 +385,34 @@ function build(t, live, photo, pw_, ph_) {
 /* ---------- WebGL ---------- */
 const cv = rt.cv;
 let gl = null, glOK = false, restored = false, P_SKY, P_FX, P_PO, bTri, bV, bC, bI, DERIV = false, firstGL = false, FBA = null, FBB = null, BKEY = '';
+
+/* ---------- embedded worlds: the other rides' engines, built against this engine's canvas and WebGL context ----------
+   Each engine sees a stand-in canvas: getContext returns this context, its size is the frame it is drawing (VW x VH
+   while drawing offscreen), and its context-loss listeners and canvas fade are no-ops, because this engine owns all of
+   that. heroInk is a no-op too: here the hero's colours follow the world on screen (uiInk). An engine draws into
+   whatever framebuffer is bound and is told its target as draw()'s 4th argument (Scale Invariant rebinds it after its
+   own post pass); xDraw gives it a clean GL state and takes a clean one back. */
+let VW = 0, VH = 0, WARM = null, XLV = null;
+const XCV = {
+  get width() { return VW || cv.width; }, get height() { return VH || cv.height; },
+  getContext: () => gl, addEventListener() {}, removeEventListener() {},
+  classList: { add() {}, remove() {}, toggle() {}, contains: () => false },
+};
+const xrt = Object.create(rt, { cv: { value: XCV }, heroInk: { value() {} } });
+/* Floating World's print marks (registration corners and the "MM" seal) show only while you are in its world */
+let XCSS = '.fw-ken,.fw-seal{opacity:0;transition:opacity .5s ease}' +
+  '.hero:not(.still)[data-world="floating-world"] .fw-ken,.hero:not(.still)[data-world="floating-world"] .fw-seal{opacity:1}' +
+  '@media (prefers-reduced-motion:reduce){.fw-ken,.fw-seal{transition:none}}';
+for (const id of Object.keys(XW)) {
+  const w = XW[id], make = W.MM_ENGINES && W.MM_ENGINES[id];
+  w.eng = null; w.ready = false; w.dead = true;
+  if (typeof make !== 'function') continue; // not shipped: the stand-in world plays instead
+  try { w.eng = make(xrt); } catch (e) { console.error('Many Worlds: could not build the ' + id + ' world', e); w.eng = null; }
+  if (!w.eng || typeof w.eng.draw !== 'function' || typeof w.eng.initGL !== 'function') { w.eng = null; continue; }
+  w.dead = false;
+  if (typeof w.eng.css === 'string') XCSS += w.eng.css;
+}
+const tIn = (Wd, t) => Wd.from + (t - cyc(t) * TC); // an embedded world's own time
 const FAR = 1600, PA = (FAR + NEAR) / (FAR - NEAR), PB = (-2 * FAR * NEAR) / (FAR - NEAR);
 const HP = '#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
 const VS_SKY = 'attribute vec2 p;varying vec2 v;void main(){v=p;gl_Position=vec4(p,0.,1.);}';
@@ -510,15 +566,21 @@ function glSetup() {
     P_PO = mkProg(VS_SKY, FS_PO(), ['p']);
     bTri = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bTri); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     bV = gl.createBuffer(); bC = gl.createBuffer(); bI = gl.createBuffer();
-    FBA = FBB = null; BKEY = '';
+    FBA = FBB = WARM = null; BKEY = '';
     return true;
   } catch (e) { console.warn(String((e && e.message) || e)); return false; }
 }
 function initGL() {
-  try { gl = cv.getContext('webgl', { antialias: !PHONE, alpha: false, depth: false, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' }); } catch (e) { gl = null; }
+  // one context for all eight worlds: Floating World's sea is depth-tested, so the frame has a depth buffer
+  try { gl = cv.getContext('webgl', { antialias: !PHONE, alpha: false, depth: true, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' }); } catch (e) { gl = null; }
   if (!gl) return false;
-  // a lost context shows the poster; once restored, the next frame warms up again and the canvas returns
-  cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); glOK = false; firstGL = false; cv.classList.remove('on'); uiM = -1; rt.heroInk(null); }); // the poster is dark: default ink
+  // a lost context shows the poster; once restored, the next frame warms up again (embedded worlds recompile as they
+  // come up) and the canvas returns
+  cv.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault(); glOK = false; firstGL = false; cv.classList.remove('on');
+    uiW = null; rt.heroInk(null); rt.hero.removeAttribute('data-world'); // the poster is dark: default ink
+    for (const id of Object.keys(XW)) XW[id].ready = false;
+  });
   cv.addEventListener('webglcontextrestored', () => { glOK = glSetup(); restored = glOK; });
   glOK = glSetup();
   return glOK;
@@ -526,17 +588,71 @@ function initGL() {
 /* render targets: A holds the current world when the post pass runs, B the frozen outgoing world of a rift */
 function fbFor(o, w, h) {
   if (o && o.w === w && o.h === h) return o;
-  if (o) { gl.deleteTexture(o.t); gl.deleteFramebuffer(o.f); }
+  if (o) { gl.deleteTexture(o.t); gl.deleteRenderbuffer(o.d); gl.deleteFramebuffer(o.f); }
   const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const d = gl.createRenderbuffer(); gl.bindRenderbuffer(gl.RENDERBUFFER, d); gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+  gl.bindRenderbuffer(gl.RENDERBUFFER, null);
   const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, d);
+  const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  return { t, f, w, h };
+  if ((!t || !d || !f || status !== gl.FRAMEBUFFER_COMPLETE) && !gl.isContextLost()) {
+    gl.deleteTexture(t); gl.deleteRenderbuffer(d); gl.deleteFramebuffer(f);
+    throw new Error('Many Worlds: incomplete framebuffer (' + status + ')');
+  }
+  return { t, d, f, w, h };
 }
 function fullTri() { gl.bindBuffer(gl.ARRAY_BUFFER, bTri); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0); gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+/* GL state as a fresh context has it (the parts any of the four engines touch), bound to fb at w x h */
+function cleanGL(fb, w, h) {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb || null); gl.viewport(0, 0, w, h);
+  gl.disable(gl.BLEND); gl.disable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE); gl.disable(gl.SCISSOR_TEST); gl.disable(gl.STENCIL_TEST); gl.disable(gl.POLYGON_OFFSET_FILL);
+  gl.depthMask(true); gl.colorMask(true, true, true, true); gl.depthFunc(gl.LESS); gl.blendEquation(gl.FUNC_ADD); gl.blendFunc(gl.ONE, gl.ZERO);
+  for (let i = 0; i < 8; i++) gl.disableVertexAttribArray(i);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, null); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.useProgram(null);
+}
+/* an embedded world's frame at ride time t, drawn by its own engine into fb (null: the screen) at w x h. A throw
+   retires the world: from the next frame on, its native stand-in plays its slot */
+function xDraw(Wd, t, photo, fb, w, h) {
+  cleanGL(fb, w, h);
+  VW = w; VH = h;
+  try { Wd.eng.draw(tIn(Wd, t), XLV, !!photo, fb || null); }
+  catch (e) { console.error('Many Worlds: the ' + Wd.id + ' world failed; ' + Wd.fb + ' plays instead', e); Wd.dead = true; }
+  VW = VH = 0;
+  cleanGL(null, cv.width, cv.height);
+}
+/* compile an embedded world on this context and draw it once offscreen, so its first frame on screen never stalls.
+   warm() does this behind the poster for the worlds the ride starts in; each rift's hit-stop does it for the world
+   after next while the frame is frozen anyway; anything else (seek, a lost context) does it the moment it is needed */
+function prep(Wd) {
+  let ok = false;
+  try { ok = !!Wd.eng.initGL(); } catch (e) { console.error('Many Worlds: the ' + Wd.id + ' world could not start', e); }
+  cleanGL(null, cv.width, cv.height);
+  if (!ok) { Wd.dead = true; return; }
+  Wd.ready = true;
+  WARM = fbFor(WARM, 64, 64);
+  xDraw(Wd, 0.5, false, WARM.f, 64, 64);
+}
+/* the world that plays cycle c: an embedded world compiles the first time it is asked for (with a live context), and
+   its native stand-in plays if its engine is missing, failed, or cannot be compiled yet */
+function worldAt(c) {
+  const w = worldOf(c);
+  if (!w.ext) return w;
+  if (!w.ready && !w.dead && gl && glOK && !gl.isContextLost()) prep(w);
+  return w.ready && !w.dead ? w : WD[w.fb];
+}
+/* one world into render target F, or (no F) only make it current for the post pass */
+function renderTo(Wd, t, live, photo, F) {
+  if (Wd.ext) { CUR = Wd; SHIFT = 0; if (F) xDraw(Wd, t, photo, F.f, F.w, F.h); return; }
+  build(t, live, photo, cv.width, cv.height);
+  if (F) drawWorld(F.f, t);
+}
 /* draws the world built last (CUR) into fb, or to the screen */
 function drawWorld(fb, tm) {
   const Wd = CUR;
@@ -599,26 +715,29 @@ function post(rp, t, live, o) {
   }
   fullTri();
 }
-/* the rift: hit-stop on the frozen outgoing frame while the fracture glows in, then the tear opens onto the next world */
+/* the rift: hit-stop on the frozen outgoing frame while the fracture glows in, then the tear opens onto the next world.
+   Either side can be an embedded world. Returns the world whose hero colours show: the outgoing one until the tear
+   has uncovered half of the name */
 function drawRift(t, k, live, photo) {
   const tw = k * TC, rp = riftP(k), Win = worldAt(k), Wout = worldAt(k - 1);
   const key = (live ? 'L' : 'S') + k + (photo ? 'p' : '') + ':' + cv.width + 'x' + cv.height;
   if (BKEY !== key) {
     FBB = fbFor(FBB, cv.width, cv.height);
     const tb = live ? Math.min(t, tw - 0.002) : tw - HS_T;
-    build(tb, live, photo, cv.width, cv.height); drawWorld(FBB.f, tb);
+    renderTo(Wout, tb, live, photo, FBB);
+    if (live) worldAt(k + 1); // the frame is frozen: if the world after next is embedded, compile it now
     BKEY = key;
   }
   if (t < tw) {
-    if (CUR !== Wout) build(tw - HS_T, live, photo, cv.width, cv.height);
+    if (CUR !== Wout) renderTo(Wout, tw - HS_T, live, photo, null);
     post(rp, t, live, { hs: 1, gi: sat((t - (tw - HS_T)) / (HS_T * 0.85)), lt: Wout.lit, gc: Win.glow });
-    return Wout.lit;
+    return Wout;
   }
-  const u = sat((t - tw) / OPEN_T), gmax = 2.2 * (cv.width / cv.height + 1);
-  build(t, live, photo, cv.width, cv.height);
-  FBA = fbFor(FBA, cv.width, cv.height); drawWorld(FBA.f, t);
-  post(rp, t, live, { hs: 0, gap: gmax * (0.012 + 0.988 * Math.pow(u, 2.8)), sm: (1 - u) * sstep(0, 0.12, u), en: 1 - u * u * u, lt: Win.lit, gc: Win.glow });
-  return Win.lit === Wout.lit ? Win.lit : Wout.lit + (Win.lit - Wout.lit) * sstep(0.35, 0.65, nameCover(rp, gmax * (0.012 + 0.988 * Math.pow(u, 2.8))));
+  const u = sat((t - tw) / OPEN_T), gmax = 2.2 * (cv.width / cv.height + 1), gap = gmax * (0.012 + 0.988 * Math.pow(u, 2.8));
+  FBA = fbFor(FBA, cv.width, cv.height);
+  renderTo(Win, t, live, photo, FBA);
+  post(rp, t, live, { hs: 0, gap, sm: (1 - u) * sstep(0, 0.12, u), en: 1 - u * u * u, lt: Win.lit, gc: Win.glow });
+  return nameCover(rp, gap) >= 0.5 ? Win : Wout;
 }
 /* share of the name block already showing the incoming world (the shader's crack test, on a 4x3 grid of points) */
 const tri = (x) => Math.abs(x - Math.floor(x) - 0.5) * 4 - 1;
@@ -639,25 +758,33 @@ function nameCover(rp, gap) {
   }
   return n / 12;
 }
-/* one frame at time t; returns how "light" the hero is (0 dark world .. 1 paper world) for the HTML colours */
+/* one frame at time t; returns the world whose hero colours show (null: no frame) */
 function frameAt(t, live, photo) {
-  if (!glOK || gl.isContextLost()) return 0;
+  if (!glOK || gl.isContextLost()) return null;
   if (!firstGL) warm(t);
   const k = riftK(t);
-  let m;
-  if (k) m = drawRift(t, k, live, photo);
+  let Wui;
+  if (k) Wui = drawRift(t, k, live, photo);
   else {
-    build(t, live, photo, cv.width, cv.height);
-    if (live && (live.b > 0.004 || live.ring > 0)) { FBA = fbFor(FBA, cv.width, cv.height); drawWorld(FBA.f, t); post(null, t, live, null); }
-    else drawWorld(null, t);
-    m = CUR.lit;
+    const Wd = worldAt(cyc(t));
+    if (Wd.ext) { CUR = Wd; SHIFT = 0; xDraw(Wd, t, photo, null, cv.width, cv.height); } // an embedded world brings its own boost look
+    else {
+      build(t, live, photo, cv.width, cv.height);
+      if (live && (live.b > 0.004 || live.ring > 0)) { FBA = fbFor(FBA, cv.width, cv.height); drawWorld(FBA.f, t); post(null, t, live, null); }
+      else drawWorld(null, t);
+    }
+    Wui = CUR;
   }
   if (!firstGL) { gl.finish(); firstGL = true; if (restored) { restored = false; requestAnimationFrame(() => cv.classList.add('on')); } } // the runtime fades #gl in after the first draw
-  return m;
+  return Wui;
 }
 /* first frame only: run every pipeline once (world to screen and to a target, both trail blends, the post pass),
-   so the first rift or boost never stalls; the poster stays up until a finished frame exists */
+   so the first rift or boost never stalls, and compile the embedded worlds the ride is about to show; the poster
+   stays up until a finished frame exists */
 function warm(t) {
+  const c = cyc(t);
+  worldAt(c); worldAt(c + 1);
+  if (worldOf(c).ext) t = 0.5; // the native pipelines warm up on blue hour
   build(t, null, false, cv.width, cv.height);
   const keep = CUR;
   FBA = fbFor(FBA, cv.width, cv.height);
@@ -668,7 +795,7 @@ function warm(t) {
 /* ---------- poster: the night world stroked on a cheap 2D canvas (also the no-WebGL fallback) ---------- */
 const T_STILL = 6.13, T_POST = 4.6;
 function drawPoster(c, w, h, t, photo) {
-  if (worldAt(cyc(t)) !== WD.night || riftK(t)) t = T_POST; // the 2D poster only paints the night world
+  if (worldOf(cyc(t)) !== WD.night || riftK(t)) t = T_POST; // the 2D poster only paints the night world
   REC = { lines: [], spr: [] };
   build(t, null, photo, w, h);
   const rec = REC; REC = null;
@@ -694,16 +821,14 @@ function drawPoster(c, w, h, t, photo) {
   c.globalCompositeOperation = 'source-over';
 }
 
-/* ---------- hero ink: the light world (ink) flips the hero text to ink, set from draw(t). The flip snaps when the
-   tear has covered half the name: a cross-fade passes through a grey where text and scrim match (about 1.1:1). */
-let uiM = -1;
-const mixc = (a, b, m) => a.map((x, i) => Math.round(x + (b[i] - x) * m)).join(',');
-function uiLit(m) {
-  m = sat(m) < 0.5 ? 0 : 1; if (m === uiM) return; uiM = m;
-  if (m <= 0) { rt.heroInk(null); return; }
-  const f = mixc([244, 241, 232], [14, 18, 30], m);
-  const ac = m > 0.5 ? '#9C4508' : '#FFA62B';
-  rt.heroInk({ hf: 'rgb(' + f + ')', hs: mixc([5, 10, 26], [242, 238, 228], m), hb: 'rgba(' + f + ',' + (0.24 + 0.12 * m).toFixed(3) + ')', ha: ac, hfoc: ac, hh: m > 0.5 ? '#9C4508' : '#FFD9B0' });
+/* ---------- hero colours: each world's set (its `ui`, else the site theme), set from draw(t). The switch snaps when
+   the tear has uncovered half the name: a cross-fade would pass through a grey where text and scrim match (about
+   1.1:1). The hero also carries the world's id (data-world), which shows Floating World's print marks in its world */
+let uiW = null;
+function uiInk(Wd) {
+  if (!Wd || Wd === uiW) return; uiW = Wd;
+  rt.heroInk(null); if (Wd.ui) rt.heroInk(Wd.ui);
+  rt.hero.setAttribute('data-world', Wd.id);
 }
 
 /* ---------- the runtime's live state, mapped onto this ride's fields ----------
@@ -722,14 +847,30 @@ function liveOf(t, live) {
   LV.lean = live.lean * 1.3; LV.b = bVis; LV.ds = live.down; LV.ring = live.wave >= 0 && live.wave < 0.75 ? live.wave / 0.75 : 0;
   return LV;
 }
+/* the runtime's live fields as the embedded engines expect them, with the boost held through each rift as above */
+const XL = { lean: 0, warp: 1, boost: 0, intent: 0, wave: 1e9, down: 0, holding: false };
+function xLive(live) {
+  if (!live) return null;
+  XL.lean = live.lean; XL.warp = live.warp; XL.boost = Math.max(live.boost, bVis); XL.intent = live.intent; XL.wave = live.wave; XL.down = live.down; XL.holding = live.holding;
+  return XL;
+}
 
 return {
   id: 'many-worlds', title: 'Many Worlds',
   caption: 'Each world is one member of a forecast ensemble, the Everett many-worlds idea (every possible outcome is realized in its own branch) applied to a forecast; the endless acceleration is a Shepard\u2013Risset illusion, speed layers spaced an octave apart, each fading in while slow and out while fast.',
-  DURATION, T_STILL, hintAt: 5.6, Q,
+  DURATION, T_STILL, hintAt: 5.6, Q, SHOTS, WORLDS, start: START, css: XCSS,
   initGL,
-  draw(t, live, photo) { uiLit(frameAt(t, liveOf(t, live), !!photo)); },
+  draw(t, live, photo) { const lv = liveOf(t, live); XLV = xLive(live); uiInk(frameAt(t, lv, !!photo)); },
   poster(ctx, w, h, t, photo) { drawPoster(ctx, w, h, t, !!photo); },
-  warpCap: (t) => (capped(t) ? 1.25 : 5) // every rift plays at near real time
+  /* every rift plays at near real time; an embedded world keeps its own ride's cap (Floating World: 2x) */
+  warpCap(t) {
+    if (capped(t)) return 1.25;
+    const w = worldOf(cyc(t));
+    return w.ext && w.eng && w.eng.warpCap ? Math.max(1, Math.min(5, +w.eng.warpCap(tIn(w, t)) || 5)) : 5;
+  },
+  /* adaptive resolution per world (runtime.js): the key switches at the hit-stop, so the frozen frame and the tear
+     render at the incoming world's scale; an embedded world starts at its own ride's scale0 */
+  qualityKey: (t) => worldOf(cyc(t + HS_T)).id,
+  scale0For(key) { const w = XW[key]; return w && w.eng && w.eng.Q && w.eng.Q.scale0 ? +w.eng.Q.scale0 : 0; }
 };
 };

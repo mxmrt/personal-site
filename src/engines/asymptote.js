@@ -558,6 +558,8 @@ function drawPoster(c, w, h, t, photo) {
 
 /* live fields from the runtime; the prototype leaned 1.2x harder than the raw pointer */
 const LV = { lean: 0, boost: 0, wave: 1e9, down: 0 };
+/* draws into whatever framebuffer is bound: the screen, or the target Many Worlds binds when it embeds this ride as a
+   world; the 4th argument names it and is otherwise unused here */
 function draw(t, live, photo) {
   let lv = null;
   if (live) { LV.lean = live.lean * 1.2; LV.boost = live.boost; LV.wave = live.wave; LV.down = live.down; lv = LV; }

@@ -273,6 +273,7 @@ function build(t, live, photo, pw_, ph_) {
 /* ---------- WebGL ---------- */
 const cv = rt.cv;
 let gl = null, glOK = false, P_FR, P_FX, P_PO, bTri, bV, bC, bI, FB = null, reveal = false;
+let TGT = null; // where the frame ends up: the screen, or the framebuffer Many Worlds passes when it embeds this ride as a world
 const HP = '#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
 const VS_TRI = 'attribute vec2 p;varying vec2 v;void main(){v=p;gl_Position=vec4(p,0.,1.);}';
 /* the fractal: one raymarch of the grown sponge, with LOD by pixel footprint */
@@ -399,7 +400,7 @@ const POST = { blur: 0, chroma: 0 };
 function drawGL() {
   if (!glOK || gl.isContextLost()) return;
   const w = cv.width, h = cv.height, post = POST.blur + POST.chroma > 0.0005 && fbo(w, h);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, post ? FB.fb : null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, post ? FB.fb : TGT);
   gl.viewport(0, 0, w, h);
   gl.disable(gl.BLEND); gl.disable(gl.DEPTH_TEST);
   gl.useProgram(P_FR);
@@ -421,7 +422,7 @@ function drawGL() {
     gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2);
   }
   if (post) {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, TGT);
     gl.disable(gl.BLEND);
     gl.useProgram(P_PO);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, FB.tex); gl.uniform1i(P_PO.u.S, 0);
@@ -503,8 +504,9 @@ function liveOf(live) {
   LV.lean = live.lean * 1.3; LV.kick = live.boost; LV.ring = live.wave;
   return LV;
 }
-function draw(t, live, photo) {
+function draw(t, live, photo, target) {
   const lv = liveOf(live);
+  TGT = target || null;
   build(t, lv, !!photo, cv.width, cv.height);
   setLight(t, lv ? lv.kick : 0);
   drawGL();
