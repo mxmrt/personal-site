@@ -3080,8 +3080,9 @@ const rt = {
     return { x: L - h.left, y: T - h.top, w: R - L, h: B - T, W: h.width, H: h.height };
   },
   /* re-ink the hero from render(t): any of hf (CSS colour), hs ("r,g,b"), hb (CSS colour); null restores the theme */
-  /* keys: hf text, hs scrim "r,g,b", hb control borders, ha control accent, hfoc focus ring, hh nav hover text */
-  heroInk(v) { const s = hero.style, K = ['hf', 'hs', 'hb', 'ha', 'hfoc', 'hh']; if (!v) { K.forEach((k) => s.removeProperty('--' + k)); return; } K.forEach((k) => { if (v[k]) s.setProperty('--' + k, v[k]); }); }
+  /* keys: hf text, hs scrim "r,g,b", hb control borders, ha control accent, hfoc focus ring, hh nav hover text,
+     st and sb the scrim's top and bottom strength (strings, e.g. '0.5') */
+  heroInk(v) { const s = hero.style, K = ['hf', 'hs', 'hb', 'ha', 'hfoc', 'hh', 'st', 'sb']; if (!v) { K.forEach((k) => s.removeProperty('--' + k)); return; } K.forEach((k) => { if (v[k]) s.setProperty('--' + k, v[k]); }); }
 };
 let RIDE = root.getAttribute('data-ride'), E = null;
 const order = [RIDE].concat(Object.keys(ENG).filter((k) => k !== RIDE));
@@ -3149,11 +3150,28 @@ function entrance(tw) {
 function hideHint() { if (!hintGone) { hintGone = true; hn.classList.add('gone'); } }
 
 /* ---------- clock, render(t), seek/play ---------- */
-let mode = 'live', paused = false, inView = true, tLive = 0, tSeek = 0, lastNow = 0, rafId = 0;
+/* live time starts at E.start (Many Worlds starts later in its loop when the URL names one of its worlds) */
+const T_START = E.start > 0 ? +E.start : 0;
+let mode = 'live', paused = false, inView = true, tLive = T_START, tSeek = 0, lastNow = 0, rafId = 0;
 const t0wall = performance.now();
 let lean = 0, leanT = 0, holding = false, held = 0, burst = 0, warp = 1, drag = false, dragX = 0, pressAt = -1e9, relAt = -1e9, relLvl = 0;
 const LIVE = { lean: 0, warp: 1, boost: 0, intent: 0, wave: 1e9, down: 0, holding: false };
-let scale = (E.Q && +E.Q.scale0) || (PHONE ? 0.85 : 1), ema = 16.7, goodMs = 0, lastStep = 0;
+const SCALE0 = (E.Q && +E.Q.scale0) || (PHONE ? 0.85 : 1);
+let scale = SCALE0, ema = 16.7, goodMs = 0, lastStep = 0;
+/* adaptive resolution per quality key: an engine whose cost changes over time (Many Worlds and the rides it embeds)
+   names the current key with E.qualityKey(t). Each key keeps its own scale, starting from E.scale0For(key), so a heavy
+   world never leaves the light ones blurred (at 60 Hz a scale that dropped never climbs back: frames can't beat 12 ms) */
+const QS = typeof E.qualityKey === 'function' ? {} : null;
+let qKey = null;
+function quality(t) {
+  if (!QS) return;
+  const k = String(E.qualityKey(t)); if (k === qKey) return;
+  if (qKey !== null) QS[qKey] = scale;
+  qKey = k;
+  scale = QS[k] != null ? QS[k] : (typeof E.scale0For === 'function' && +E.scale0For(k)) || SCALE0;
+  ema = 16.7; goodMs = 0; lastStep = performance.now();
+  sizeCanvas(scale);
+}
 /* render(t): a pure function of t (no lean, no boost) */
 function render(t, photo) {
   if (glOK) drawGL(t, null, !!photo); else drawPoster(t, !!photo);
@@ -3165,7 +3183,7 @@ function frame(now) {
   if (!running()) return;
   window.MM_FRAMES = (window.MM_FRAMES | 0) + 1; // live hero frames, for the tests and tools (the Lab map runs its own loop)
   const dms = lastNow ? now - lastNow : 16.7, dt = Math.min(0.25, dms / 1000); lastNow = now;
-  adapt(dms, now); // resize before drawing: a resize after the draw would present a cleared (black) frame
+  quality(tLive); adapt(dms, now); // resize before drawing: a resize after the draw would present a cleared (black) frame
   lean += (leanT - lean) * (1 - Math.exp(-dt / 0.18));
   /* boost: time warp eases in from 1x to 4x over 1.2 s and creeps toward 5x while held; a tap gives a 0.6 s burst;
      on release everything eases back over about a second */
@@ -3182,7 +3200,7 @@ function frame(now) {
   drawGL(tLive, LIVE, false);
   if (!glOK) return;
   entrance((now - t0wall) / 1000);
-  if (!hintGone && tLive > HINT_AT) hideHint();
+  if (!hintGone && tLive - T_START > HINT_AT) hideHint();
   rafId = requestAnimationFrame(frame);
 }
 function kickLoop() {
@@ -3216,6 +3234,8 @@ window.seek = function (t) {
 window.play = function () { if (mode === 'manual') { tLive = tSeek; mode = 'live'; if (glOK) sizeCanvas(scale); } kickLoop(); };
 window.render = (t) => render(+t || 0);
 window.MM_RIDE = RIDE; window.MM_STILL = T_STILL; // which ride loaded, and its still frame (tools/make-images.mjs)
+window.MM_SHOTS = Array.isArray(E.SHOTS) ? E.SHOTS.slice() : null; // times the tools photograph (tools/preview.mjs)
+window.MM_WORLDS = Array.isArray(E.WORLDS) ? E.WORLDS.map((w) => Object.assign({}, w)) : null; // a ride's worlds, for the tests
 window.MM_FRAMES = 0;
 
 /* ---------- pause, visibility, resize ---------- */
@@ -3268,19 +3288,6 @@ D.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', (e
   const f = id === 'top' ? D.querySelector('.skip') : el.querySelector('h2') || el;
   if (f) { if (id !== 'top') f.setAttribute('tabindex', '-1'); f.focus({ preventScroll: true }); }
 }));
-/* take another ride: a different ride on the next load */
-const again = $('again');
-if (again) again.addEventListener('click', () => {
-  const ids = Object.keys(ENG).filter((k) => k !== RIDE);
-  if (!ids.length) return;
-  const next = ids[Math.floor(Math.random() * ids.length)];
-  let stored = false;
-  try { W.sessionStorage.setItem('mm-next', next); stored = true; } catch (err) { /* carry the choice in the URL below */ }
-  if (!stored) W.location.hash = next;
-  else if (ENG[(location.hash || '').slice(1)]) { try { history.replaceState(null, '', location.pathname + location.search); } catch (err) { /* sandboxed frame */ } }
-  W.scrollTo(0, 0);
-  W.location.reload();
-});
 
 /* ---------- start: poster first, then WebGL ---------- */
 sizeCanvas(REDUCED ? 1 : scale);
