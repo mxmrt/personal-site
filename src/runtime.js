@@ -1,8 +1,9 @@
 /* MaxMartinelli.com ride runtime.
-   The shell picked a ride before first paint (html[data-ride]). This runtime builds that ride's engine and owns
-   everything the four rides share: canvas sizing and adaptive resolution, the clock, seek/play, pause, off-screen and
-   hidden-tab pausing, hold-to-accelerate input, the "Hold to accelerate" hint, the name entrance, and the
-   poster / no-WebGL / reduced-motion fallbacks. The site is silent: there is no audio anywhere.
+   The shell picked the ride before first paint (html[data-ride]); today there is one, Many Worlds, which embeds the
+   other three engines as worlds of its own. This runtime builds that engine and owns everything around it: canvas
+   sizing and adaptive resolution, the clock, seek/play, pause, off-screen and hidden-tab pausing, hold-to-accelerate
+   input, the "Hold to accelerate" hint, the name entrance, and the poster / no-WebGL / reduced-motion fallbacks.
+   The site is silent: there is no audio anywhere.
    See ENGINE_API.md for the engine contract. */
 (function () {
 'use strict';

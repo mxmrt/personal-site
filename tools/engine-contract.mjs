@@ -1,6 +1,8 @@
-// engine-contract.mjs: load every ride engine in a sandbox (no browser) and check it honours docs/ENGINE_API.md:
-// it registers under its own id, returns the required hooks with the right types, and its 2D poster (the no-WebGL
-// fallback) draws at several times without throwing. Prints one line per ride; exit 1 on any failure.
+// engine-contract.mjs: load every engine in a sandbox (no browser) and check it honours docs/ENGINE_API.md: the ride
+// (rides.json) and the engines it embeds as worlds (worlds.json), each alone. It registers under its own id, returns
+// the required hooks with the right types, and its 2D poster (the no-WebGL fallback) draws at several times without
+// throwing. Many Worlds loads without its worlds here, so this also proves it falls back to its native worlds when an
+// embedded engine is missing. Prints one line per engine; exit 1 on any failure.
 // usage: node tools/engine-contract.mjs [id ...]
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,7 +10,8 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const IDS = process.argv.slice(2).length ? process.argv.slice(2) : JSON.parse(fs.readFileSync(path.join(ROOT, 'rides.json'), 'utf8'));
+const list = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
+const IDS = process.argv.slice(2).length ? process.argv.slice(2) : list('rides.json').concat(list('worlds.json'));
 
 /* anything-goes stand-in for DOM objects and 2D contexts: every property is callable and chainable */
 const any = () => new Proxy(function () {}, {
@@ -68,16 +71,20 @@ for (const id of IDS) {
   if (!E || typeof E !== 'object') { fail('factory did not return an object'); continue; }
   const need = { id: 'string', title: 'string', caption: 'string', DURATION: 'number', T_STILL: 'number', initGL: 'function', draw: 'function', poster: 'function' };
   for (const [k, t] of Object.entries(need)) if (typeof E[k] !== t) fail(`${k} should be a ${t}, got ${typeof E[k]}`);
-  const optional = { hintAt: 'number', Q: 'object', resize: 'function', warpCap: 'function', entrance: 'function', css: 'string' };
+  const optional = { hintAt: 'number', Q: 'object', resize: 'function', warpCap: 'function', entrance: 'function', css: 'string',
+    SHOTS: 'object', WORLDS: 'object', start: 'number', qualityKey: 'function', scale0For: 'function' };
   for (const [k, t] of Object.entries(optional)) if (E[k] !== undefined && typeof E[k] !== t) fail(`${k} should be a ${t} when present, got ${typeof E[k]}`);
   for (const k of ['accent', 'lam']) if (k in E) fail(`${k}() is a retired sound hook; the site is silent`);
   if (E.id !== id) fail(`id is "${E.id}", expected "${id}"`);
-  if (!(E.title || '').trim() || !(E.caption || '').trim()) fail('title and caption must be non-empty (the footer shows them)');
+  if (!(E.title || '').trim() || !(E.caption || '').trim()) fail('title and caption must be non-empty');
   if (/<[a-z]/i.test(E.caption || '')) fail('caption must be plain text');
   if (!(E.DURATION > 0)) fail('DURATION must be > 0');
   if (!(E.T_STILL >= 0)) fail('T_STILL must be >= 0');
   if (E.Q && E.Q.pr !== undefined && !(E.Q.pr > 0 && E.Q.pr <= 3)) fail('Q.pr should be a pixel-ratio cap in (0, 3]');
-  if (E.warpCap) for (const t of [0, 5.9, 6, 6.2, 12, 30]) { const c = E.warpCap(t); if (!(c >= 1)) fail(`warpCap(${t}) = ${c}; must be >= 1`); }
+  if (E.warpCap) for (const t of [0, 5.9, 6, 6.2, 12, 20, 30, 47.9]) { const c = E.warpCap(t); if (!(c >= 1)) fail(`warpCap(${t}) = ${c}; must be >= 1`); }
+  if (E.SHOTS && !(Array.isArray(E.SHOTS) && E.SHOTS.every((t) => t >= 0 && t <= E.DURATION))) fail('SHOTS must be times within [0, DURATION]');
+  if (E.qualityKey) for (const t of [0, 5.95, 6.1, 30]) if (typeof E.qualityKey(t) !== 'string') fail(`qualityKey(${t}) should be a string`);
+  if (E.start !== undefined && !(E.start >= 0)) fail('start must be >= 0');
   for (const t of [0, E.T_STILL, E.DURATION * 0.5, E.DURATION, E.DURATION * 3.7]) {
     try { E.poster(ctx2d(), 1280, 720, t, true); E.poster(ctx2d(), 390, 640, t, false); }
     catch (e) { fail(`poster(t=${t}) threw: ${e.message}`); break; }

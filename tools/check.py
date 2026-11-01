@@ -3,7 +3,7 @@
 
   1. public/ is a fresh build of src/ and static/ (build.py --check)
   2. every inline <script> in public/index.html parses (node --check; JSON data blocks with a JSON parser)
-  3. every ride engine honours docs/ENGINE_API.md (tools/engine-contract.mjs)
+  3. every engine, the ride and the worlds it embeds, honours docs/ENGINE_API.md (tools/engine-contract.mjs)
   4. the site is silent: no audio or video APIs in src/ or public/
   5. HTML basics: doctype, lang, charset, viewport, title, description, social tags, one h1, unique ids, in-page
      links resolve, buttons and links have names, external links use https, no inline event handlers, no external

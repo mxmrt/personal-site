@@ -26,17 +26,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Martian+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* One shell, four rides. Layout and components are shared; each ride only swaps the tokens below and the hero animation.
-   Hero colours run through --hf (text), --hs (scrim rgb) and --hb (control borders) so a ride can re-ink the hero from render(t). */
+/* One shell, one ride: Many Worlds, which embeds the site's other engines as worlds. The tokens below are its theme.
+   Hero colours run through --hf (text), --hs (scrim rgb) and --hb (control borders) so the ride can re-ink the hero from render(t), world by world. */
 :root{color-scheme:dark;
 --n0:#050A1A;--n1:#0F2147;--n2:#0A1532;--ink:#F4F1E8;--ink2:#CDD3E2;--mut:#9AA6C4;--hot:#FF2B2B;--acc:#FFA62B;--acc2:#6FA8FF;--hov:#CFE0FF;--rule:rgba(244,241,232,.13);
 --hf:var(--ink);--hs:5,10,26;--hb:rgba(244,241,232,.24);--ha:var(--acc2);--hfoc:var(--acc);--hh:var(--hov);--st:.45;--sb:0;
 --badge:var(--acc);--badge-fg:var(--n0);--slot-line:rgba(255,166,43,.5);--slot-bg:15,33,71;
 --fd:'Big Shoulders Display','Barlow Condensed','Arial Narrow',Impact,sans-serif;--fm:'Martian Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;--fb:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--gut:clamp(16px,5.5vw,88px)}
 :root[data-ride="many-worlds"]{--acc2:#FFA62B;--hov:#FFD9B0;--st:.4}
-:root[data-ride="scale-invariant"]{--n1:#1B2B4A;--acc2:#FFA62B;--hov:#FFD39A;--slot-bg:27,43,74;--st:.5}
-:root[data-ride="floating-world"]{--n0:#0B1D35;--n1:#1F3A5F;--n2:#0E2440;--ink:#F2EBDD;--ink2:#D8D2C3;--mut:#A9BDCA;--hot:#C8402F;--acc:#E3CFA8;--acc2:#E3CFA8;--hov:#E3CFA8;--rule:rgba(242,235,221,.14);--hs:11,29,53;--hb:rgba(242,235,221,.3);--badge:#C8402F;--badge-fg:#FFFAF0;--slot-line:rgba(157,185,201,.5);--slot-bg:31,58,95;--st:0}
-:root[data-ride="asymptote"]{--acc2:#6FA8FF;--hov:#CFE0FF;--slot-line:rgba(111,168,255,.5);--st:0;--sb:.7}
 html{background:var(--n0)}
 body{background:var(--n0);color:var(--ink);font:400 17px/1.62 var(--fb);-webkit-text-size-adjust:100%}
 a{color:inherit}
@@ -112,7 +109,7 @@ h2{margin:0 0 18px;font:800 clamp(44px,6vw,68px)/.92 var(--fd);letter-spacing:.0
 .slot .sa:hover{color:var(--hov)}
 /* Sweet Spots wears its own project's wrapper: strawberry with grain, print crop marks, the ring-and-diamond wordmark
    (Archivo, drawn as outlines) and the project's live map with its tour of the new candies (src/lab/sweet-spots-map.js).
-   Fixed colours on purpose: it looks the same on every ride. */
+   Fixed colours on purpose: it never takes the site's theme. */
 .slot.ss{grid-column:1/-1;position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"mark sd" "map map";align-items:start;gap:14px 24px;padding:28px 24px 24px;border:0;border-radius:0;color:#1b1317;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .03  0 0 0 0 .07  0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E") repeat,#ff5a8f}
 .ss h3{grid-area:mark;line-height:0}
 .ss-go{display:block;max-width:300px}
@@ -199,18 +196,12 @@ section>:not(h2){grid-column:2}
 @media (prefers-reduced-motion:reduce){#gl,.hint{transition:none}}
 </style>
 <script>
-/* pick the ride before first paint: a ride id in the hash wins, then a "take another ride" request, then random without repeating the last visit */
+/* pick the ride before first paint: one today, Many Worlds (it embeds the other three as worlds; a world's id in the
+   hash, like #asymptote, starts the ride in that world) */
 (function () {
-  var d = document.documentElement, ids = ["many-worlds", "scale-invariant", "floating-world", "asymptote"], h = (location.hash || '').slice(1), pick = null;
+  var d = document.documentElement, ids = ["many-worlds"], h = (location.hash || '').slice(1);
   d.lang = 'en';
-  if (ids.indexOf(h) >= 0) pick = h;
-  if (!pick) { try { var n = sessionStorage.getItem('mm-next'); sessionStorage.removeItem('mm-next'); if (ids.indexOf(n) >= 0) pick = n; } catch (e) {} }
-  if (!pick) {
-    var last = null; try { last = localStorage.getItem('mm-last-ride'); } catch (e) {}
-    var pool = ids.filter(function (k) { return k !== last; }); if (!pool.length) pool = ids;
-    pick = pool[Math.floor(Math.random() * pool.length)];
-  }
-  try { localStorage.setItem('mm-last-ride', pick); } catch (e) {}
+  var pick = ids.indexOf(h) >= 0 ? h : ids[0];
   d.setAttribute('data-ride', pick);
 })();
 </script>
@@ -3177,10 +3168,11 @@ return {
 </script>
 <script>
 /* MaxMartinelli.com ride runtime.
-   The shell picked a ride before first paint (html[data-ride]). This runtime builds that ride's engine and owns
-   everything the four rides share: canvas sizing and adaptive resolution, the clock, seek/play, pause, off-screen and
-   hidden-tab pausing, hold-to-accelerate input, the "Hold to accelerate" hint, the name entrance, and the
-   poster / no-WebGL / reduced-motion fallbacks. The site is silent: there is no audio anywhere.
+   The shell picked the ride before first paint (html[data-ride]); today there is one, Many Worlds, which embeds the
+   other three engines as worlds of its own. This runtime builds that engine and owns everything around it: canvas
+   sizing and adaptive resolution, the clock, seek/play, pause, off-screen and hidden-tab pausing, hold-to-accelerate
+   input, the "Hold to accelerate" hint, the name entrance, and the poster / no-WebGL / reduced-motion fallbacks.
+   The site is silent: there is no audio anywhere.
    See ENGINE_API.md for the engine contract. */
 (function () {
 'use strict';
