@@ -3429,6 +3429,10 @@ if (REDUCED) hero.classList.add('still');
 drawPoster(REDUCED ? T_STILL : 0, REDUCED);
 entrance(REDUCED ? 99 : 0);
 try { glOK = !!E.initGL(); } catch (err) { console.error(err); glOK = false; }
+// Engine restore listeners rebuild first; paused, manual and reduced-motion views still need one redraw.
+cv.addEventListener('webglcontextrestored', () => {
+  requestAnimationFrame(() => { if (glOK && !running()) redraw(); });
+});
 if (!glOK) fail();
 else if (REDUCED) still();
 else kickLoop();

@@ -253,31 +253,45 @@ for (const vp of MW ? VIEWPORTS : []) await test(`Many Worlds on ${vp.name}: all
   } finally { await ctx.close(); }
 });
 
-if (MW) await test('Many Worlds: a lost WebGL context shows the poster, and once restored every world draws again', async () => {
-  const { ctx, page, bad } = await open(VIEWPORTS[0], { hash: '#many-worlds' });
-  try {
-    await page.waitForSelector('#gl.on', { timeout: 60000 });
-    const worlds = await page.evaluate(() => window.MM_WORLDS), shots = await page.evaluate(() => window.MM_SHOTS);
-    for (const t of shots) await seekTo(page, t);   // every embedded world compiled on the first context
-    const off = await page.evaluate(async () => {
-      const cv = document.getElementById('gl'), ext = cv.getContext('webgl').getExtension('WEBGL_lose_context');
-      if (!ext) return 'no WEBGL_lose_context';
-      ext.loseContext(); await new Promise((r) => setTimeout(r, 300));
-      const state = cv.classList.contains('on') ? '#gl still showing' : document.getElementById('top').hasAttribute('data-world') ? 'hero kept a world' : 'ok';
-      ext.restoreContext(); await new Promise((r) => setTimeout(r, 300));
-      return state;
-    });
-    expect(off === 'ok', 'while the context is lost the poster should show in the theme colours: ' + off);
-    for (let i = 0; i < worlds.length; i++) {
-      await seekTo(page, shots[i]);
-      const s = await heroState(page);
-      expect(s.world === worlds[i].id, `after the restore, t=${shots[i]} should be the ${worlds[i].id} world, the hero says ${s.world}`);
-      expect(spread(await canvasPNG(page)) > 40, `after the restore, the ${worlds[i].id} world drew a flat frame`);
-    }
-    await page.waitForSelector('#gl.on', { timeout: 10000 });
-    expect((await glError(page)) === 0, 'WebGL reported an error');
-    expect(!bad.length, bad.join('\n'));
-  } finally { await ctx.close(); }
+if (MW) await test('Many Worlds: context restore redraws paused and reduced-motion frames without restarting, and every world draws again', async () => {
+  for (const reducedMotion of ['no-preference', 'reduce']) {
+    const { ctx, page, bad } = await open(VIEWPORTS[0], { reducedMotion, hash: '#many-worlds' });
+    try {
+      await page.waitForSelector('#gl.on', { timeout: 60000 });
+      const worlds = await page.evaluate(() => window.MM_WORLDS), shots = await page.evaluate(() => window.MM_SHOTS);
+      if (reducedMotion === 'no-preference') {
+        for (const t of shots) await seekTo(page, t);   // compile every embedded world on the first context
+        await page.evaluate(() => window.play());
+        await page.click('#pz');   // restore must redraw without unpausing
+      }
+      const before = await heroState(page);
+      const off = await page.evaluate(async () => {
+        const cv = document.getElementById('gl'), ext = cv.getContext('webgl').getExtension('WEBGL_lose_context');
+        if (!ext) return 'no WEBGL_lose_context';
+        ext.loseContext(); await new Promise((r) => setTimeout(r, 300));
+        const state = cv.classList.contains('on') ? '#gl still showing' : document.getElementById('top').hasAttribute('data-world') ? 'hero kept a world' : 'ok';
+        ext.restoreContext();
+        return state;
+      });
+      expect(off === 'ok', 'while the context is lost the poster should show in the theme colours: ' + off);
+      // Do not seek or resize here: either would hide a missing automatic restoration redraw.
+      await page.waitForSelector('#gl.on', { timeout: 60000 });
+      expect((await heroState(page)).world === before.world, `${reducedMotion}: context restore should redraw the same world`);
+      expect(spread(await canvasPNG(page)) > 40, `${reducedMotion}: restored frame is flat`);
+      expect((await heroFramesOver(page, 700)) === 0, `${reducedMotion}: context restore restarted the animation`);
+      if (reducedMotion === 'no-preference') {
+        expect(await page.getAttribute('#pz', 'aria-pressed') === 'true', 'context restore should preserve Pause');
+        for (let i = 0; i < worlds.length; i++) {
+          await seekTo(page, shots[i]);
+          const s = await heroState(page);
+          expect(s.world === worlds[i].id, `after the restore, t=${shots[i]} should be the ${worlds[i].id} world, the hero says ${s.world}`);
+          expect(spread(await canvasPNG(page)) > 40, `after the restore, the ${worlds[i].id} world drew a flat frame`);
+        }
+      }
+      expect((await glError(page)) === 0, 'WebGL reported an error');
+      expect(!bad.length, bad.join('\n'));
+    } finally { await ctx.close(); }
+  }
 });
 
 if (MW) await test('Many Worlds: each embedded world draws exactly what its own engine draws standalone', async () => {
